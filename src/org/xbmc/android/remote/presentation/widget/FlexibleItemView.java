@@ -14,6 +14,11 @@ import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 
 public class FlexibleItemView extends FiveLabelsItemView {
+
+	public FlexibleItemView(Context context, IManager manager, int width,
+			Bitmap defaultCover, Drawable selection, boolean fixedSize) {
+		super(context, manager, width, defaultCover, selection, fixedSize);
+	} /*
 		private int POSTER_FORMAT = Dimension.PORTRAIT;
 	
 	public FlexibleItemView(Context context, IManager manager, int width, Bitmap defaultCover, Drawable selection, boolean fixedSize) {
@@ -55,7 +60,7 @@ public class FlexibleItemView extends FiveLabelsItemView {
 	 * `----------'
 	 * </pre>
 	 * @param canvas Canvas to draw on
-	 */
+	 */ /*
 	private void drawLandscape(Canvas canvas, int drawWidth) {
 		final int width = mWidth;
 		final boolean isSelected = isSelected() || isPressed();
@@ -119,5 +124,5 @@ public class FlexibleItemView extends FiveLabelsItemView {
 		}
 		requestLayout();
 		invalidate();
-	}
+	}*/
 }
