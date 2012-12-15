@@ -131,6 +131,7 @@ public class NowPlayingActivity extends Activity {
 
 		// set titlebar text
 		actionBar.setTitle("Now playing");
+		actionBar.setDisplayHomeAsUpEnabled(true);
 
 		mConfigurationManager = ConfigurationManager.getInstance(this);
 
@@ -308,5 +309,16 @@ public class NowPlayingActivity extends Activity {
 		finish();
 
 		return;
+	}
+
+	@Override
+	public boolean onMenuItemSelected(int featureId, MenuItem item) {
+		switch (item.getItemId()) {
+		case android.R.id.home:
+			finish();
+			return true;
+		default:
+			return super.onOptionsItemSelected(item);
+		}
 	}
 }
