@@ -25,7 +25,6 @@
 				android:layout_width="fill_parent" android:layout_height="fill_parent"
 				android:id="@+id/albumlist_outer_layout" android:orientation="vertical"
 				android:fadingEdge="none" >
-				<include layout="@layout/titlebar" />
 				<include layout="@layout/listmessage" />
 				<org.xbmc.android.widget.FastScrollView
 					android:layout_width="fill_parent"
@@ -51,7 +50,6 @@
 				android:layout_width="fill_parent" android:layout_height="fill_parent"
 				android:id="@+id/filelist_outer_layout" android:orientation="vertical"
 				android:fadingEdge="none">
-				<include layout="@layout/titlebar" />
 				<include layout="@layout/listmessage" />
 				<org.xbmc.android.widget.FastScrollView
 					android:layout_width="fill_parent"
@@ -69,7 +67,6 @@
 				android:layout_width="fill_parent" android:layout_height="fill_parent"
 				android:id="@+id/artists_outer_layout" android:orientation="vertical"
 				android:fadingEdge="none">
-				<include layout="@layout/titlebar" />
 				<include layout="@layout/listmessage" />
 				<org.xbmc.android.widget.FastScrollView
 					android:layout_width="fill_parent"
@@ -87,7 +84,6 @@
 				android:layout_width="fill_parent" android:layout_height="fill_parent"
 				android:id="@+id/genres_outer_layout" android:orientation="vertical"
 				android:fadingEdge="none">
-				<include layout="@layout/titlebar" />
 				<include layout="@layout/listmessage" />
 				<org.xbmc.android.widget.FastScrollView
 					android:layout_width="fill_parent"
@@ -105,7 +101,6 @@
 				android:layout_width="fill_parent" android:layout_height="fill_parent"
 				android:id="@+id/compilations_outer_layout" android:orientation="vertical"
 				android:fadingEdge="none">
-				<include layout="@layout/titlebar" />
 				<include layout="@layout/listmessage" />
 				<org.xbmc.android.widget.FastScrollView
 					android:layout_width="fill_parent"

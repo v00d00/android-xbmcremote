@@ -92,24 +92,19 @@ public class MusicLibraryActivity extends SlidingTabActivity implements ViewTree
 		// assign the gui logic to each tab
 		mHandler = new Handler();
 		mAlbumController = new AlbumListController();
-		mAlbumController.findTitleView(findViewById(R.id.albumlist_outer_layout));
 		mAlbumController.findMessageView(findViewById(R.id.albumlist_outer_layout));
 //		mAlbumController.setGrid((GridView)findViewById(R.id.albumlist_grid));
 
 		mFileController = new FileListController();
-		mFileController.findTitleView(findViewById(R.id.filelist_outer_layout));
 		mFileController.findMessageView(findViewById(R.id.filelist_outer_layout));
 		
 		mArtistController = new ArtistListController();
-		mArtistController.findTitleView(findViewById(R.id.artists_outer_layout));
 		mArtistController.findMessageView(findViewById(R.id.artists_outer_layout));
 
 		mGenreController = new MusicGenreListController();
-		mGenreController.findTitleView(findViewById(R.id.genres_outer_layout));
 		mGenreController.findMessageView(findViewById(R.id.genres_outer_layout));
 
 		mCompilationsController = new AlbumListController();
-		mCompilationsController.findTitleView(findViewById(R.id.compilations_outer_layout));
 		mCompilationsController.findMessageView(findViewById(R.id.compilations_outer_layout));
 		mCompilationsController.setCompilationsOnly(true);
 		

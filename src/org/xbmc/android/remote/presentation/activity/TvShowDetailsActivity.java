@@ -118,7 +118,7 @@ public class TvShowDetailsActivity extends Activity {
 		final TvShow show = (TvShow)getIntent().getSerializableExtra(ListController.EXTRA_TVSHOW);
 		mTvShowDetailsController = new TvShowDetailsController(this, show);
 		
-		((TextView)findViewById(R.id.titlebar_text)).setText(show.getName());
+		getActionBar().setTitle(show.getName());
 		
 		Log.i("EpisodeDetailsActivity", "rating = " + show.rating + ", index = " + ((int)Math.round(show.rating % 10)) + ".");
 		if (show.rating > -1) {

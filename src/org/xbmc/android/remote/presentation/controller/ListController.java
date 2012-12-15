@@ -32,6 +32,7 @@ import org.xbmc.api.business.DataResponse;
 import org.xbmc.api.presentation.INotifiableController;
 import org.xbmc.api.type.ThumbSize;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -71,8 +72,7 @@ public abstract class ListController extends AbstractController implements Seria
 	private static final String PREF_HIDE_WATCHED = "HideWatched";
 	
 	protected AbsListView mList;
-	
-	private TextView mTitleView;
+
 	private ViewGroup mMessageGroup;
 	private TextView mMessageText;
 	private boolean hideWatched;
@@ -139,10 +139,6 @@ public abstract class ListController extends AbstractController implements Seria
 	
 	protected void refreshList() { }
 	
-	public void findTitleView(View parent) {
-		mTitleView = (TextView)parent.findViewById(R.id.titlebar_text);	
-	}
-	
 	public void findMessageView(View parent) {
 		mMessageGroup = (ViewGroup)parent.findViewById(R.id.listmessage);	
 		mMessageText = (TextView)parent.findViewById(R.id.listmessage_text);	
@@ -150,13 +146,8 @@ public abstract class ListController extends AbstractController implements Seria
 	}
 	
 	protected void setTitle(final String title) {
-		if (mTitleView != null) {
-			mHandler.post(new Runnable() {
-				public void run() {
-					mTitleView.setText(title);
-				}
-			});
-		}
+		ActionBar actionBar = mActivity.getActionBar();
+		actionBar.setTitle(title);
 	}
 		
 	protected boolean isCreated() {

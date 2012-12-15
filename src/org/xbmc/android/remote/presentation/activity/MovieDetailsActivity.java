@@ -120,7 +120,7 @@ public class MovieDetailsActivity extends Activity {
 		final Movie movie = (Movie)getIntent().getSerializableExtra(ListController.EXTRA_MOVIE);
 		mMovieDetailsController = new MovieDetailsController(this, movie);
 		
-		((TextView)findViewById(R.id.titlebar_text)).setText(movie.getName());
+		getActionBar().setTitle(movie.getName());
 		
 		Log.i("MovieDetailsActivity", "rating = " + movie.rating + ", index = " + ((int)Math.round(movie.rating % 10)) + ".");
 		if (movie.rating > -1) {

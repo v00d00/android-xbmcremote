@@ -76,16 +76,13 @@ public class MusicGenreActivity extends SlidingTabActivity  {
 		
 		final Handler handler = new Handler();
 		mArtistController = new ArtistListController();
-		mArtistController.findTitleView(findViewById(R.id.artistlist_outer_layout));
 		mArtistController.findMessageView(findViewById(R.id.artistlist_outer_layout));
 		mArtistController.onCreate(this, handler, (ListView)findViewById(R.id.artistlist_list)); // first tab can be updated now.
 
 		mAlbumController = new AlbumListController();
-		mAlbumController.findTitleView(findViewById(R.id.albumlist_outer_layout));
 		mAlbumController.findMessageView(findViewById(R.id.albumlist_outer_layout));
 
 		mSongController = new SongListController();
-		mSongController.findTitleView(findViewById(R.id.songlist_outer_layout));
 		mSongController.findMessageView(findViewById(R.id.songlist_outer_layout));
 		
 		mTabHost.setOnTabChangedListener(new OnTabChangeListener() {

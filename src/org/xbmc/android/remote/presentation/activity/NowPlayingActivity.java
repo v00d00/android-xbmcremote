@@ -35,6 +35,7 @@ import org.xbmc.api.type.ThumbSize;
 import org.xbmc.eventclient.ButtonCodes;
 
 import android.annotation.SuppressLint;
+import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -55,7 +56,7 @@ import android.widget.TextView;
 
 public class NowPlayingActivity extends Activity {
 
-	private TextView mTopTitleView;
+	private ActionBar actionBar;
 	private TextView mBottomTitleView;
 	private TextView mBottomSubtitleView;
 	private TextView mCounterLeftView;
@@ -105,7 +106,7 @@ public class NowPlayingActivity extends Activity {
 		mNowPlayingController = new NowPlayingController(this, new Handler());
 
 		mSeekBar = (SeekBar) findViewById(R.id.now_playing_progessbar);
-		mTopTitleView = (TextView) findViewById(R.id.now_playing_top_title);
+		actionBar = getActionBar();
 		mBottomTitleView = (TextView) findViewById(R.id.now_playing_bottom_title);
 		mBottomSubtitleView = (TextView) findViewById(R.id.now_playing_bottom_subtitle);
 		mCounterLeftView = (TextView) findViewById(R.id.now_playing_counter_left);
@@ -129,7 +130,7 @@ public class NowPlayingActivity extends Activity {
 		topFrame.setForeground(null);
 
 		// set titlebar text
-		((TextView) findViewById(R.id.titlebar_text)).setText("Now playing");
+		actionBar.setTitle("Now playing");
 
 		mConfigurationManager = ConfigurationManager.getInstance(this);
 
@@ -150,7 +151,7 @@ public class NowPlayingActivity extends Activity {
 
 	public void updateInfo(String topTitle, String bottomTitme,
 			String bottomSubtitle) {
-		mTopTitleView.setText(topTitle);
+		actionBar.setTitle(topTitle);
 		mBottomTitleView.setText(bottomTitme);
 		mBottomSubtitleView.setText(bottomSubtitle);
 	}

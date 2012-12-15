@@ -106,7 +106,7 @@ public class EpisodeDetailsActivity extends Activity {
 		final Episode episode = (Episode)getIntent().getSerializableExtra(ListController.EXTRA_EPISODE);
 		mEpisodeDetailsController = new EpisodeDetailsController(this, episode);
 		
-		((TextView)findViewById(R.id.titlebar_text)).setText(episode.getName());
+		getActionBar().setTitle(episode.getName());
 		
 		Log.i("EpisodeDetailsActivity", "rating = " + episode.rating + ", index = " + ((int)Math.round(episode.rating % 10)) + ".");
 		if (episode.rating > -1) {

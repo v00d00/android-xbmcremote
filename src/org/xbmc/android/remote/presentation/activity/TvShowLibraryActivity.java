@@ -92,19 +92,15 @@ public class TvShowLibraryActivity extends SlidingTabActivity implements ViewTre
 		// assign the gui logic to each tab
 		mHandler = new Handler();
 		mTvShowController = new TvShowListController();
-		mTvShowController.findTitleView(findViewById(R.id.tvshowlist_outer_layout));
 		mTvShowController.findMessageView(findViewById(R.id.tvshowlist_outer_layout));
 
 		mActorController = new ActorListController(ActorListController.TYPE_TVSHOW);
-		mActorController.findTitleView(findViewById(R.id.actorlist_outer_layout));
 		mActorController.findMessageView(findViewById(R.id.actorlist_outer_layout));
 
 		mGenresController = new MovieGenreListController(MovieGenreListController.TYPE_TVSHOW);
-		mGenresController.findTitleView(findViewById(R.id.genrelist_outer_layout));
 		mGenresController.findMessageView(findViewById(R.id.genrelist_outer_layout));
 
 		mFileController = new FileListController(MediaType.VIDEO);
-		mFileController.findTitleView(findViewById(R.id.filelist_outer_layout));
 		mFileController.findMessageView(findViewById(R.id.filelist_outer_layout));
 		
 		mTabHost.setOnTabChangedListener(new OnTabChangeListener() {

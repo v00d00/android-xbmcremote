@@ -99,7 +99,6 @@ public class PlaylistActivity extends Activity {
 
 		// create and associate logic
 		mPlaylistController = new PlaylistController();
-		mPlaylistController.findTitleView(findViewById(R.id.playlist_outer_layout));
 		mPlaylistController.findMessageView(findViewById(R.id.playlist_outer_layout));
 		mPlaylistController.onCreate(this, new Handler(), (ListView) findViewById(R.id.playlist_list));
 

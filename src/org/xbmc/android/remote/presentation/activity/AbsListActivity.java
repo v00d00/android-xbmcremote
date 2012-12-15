@@ -32,6 +32,7 @@ import org.xbmc.api.business.IEventClientManager;
 import org.xbmc.api.type.ThumbSize;
 import org.xbmc.eventclient.ButtonCodes;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -62,7 +63,7 @@ public abstract class AbsListActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		// set display size
 		final Display display = getWindowManager().getDefaultDisplay(); 
-		ThumbSize.setScreenSize(display.getWidth(), display.getHeight());		
+		ThumbSize.setScreenSize(display.getWidth(), display.getHeight());
 	}
 	
 	protected void setupLists(int layoutResId) {
@@ -73,7 +74,6 @@ public abstract class AbsListActivity extends Activity {
 		mListController = (ListController)getLastNonConfigurationInstance();
 		if (mListController == null) {
 			mListController = (ListController) getIntent().getSerializableExtra(ListController.EXTRA_LIST_CONTROLLER);
-			mListController.findTitleView(findViewById(R.id.blanklist_outer_layout));
 			mListController.findMessageView(findViewById(R.id.blanklist_outer_layout));
 			mListController.onCreate(this, new Handler(), (AbsListView)findViewById(R.id.blanklist_list));
 		}

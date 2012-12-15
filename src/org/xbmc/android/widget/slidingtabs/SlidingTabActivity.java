@@ -35,6 +35,7 @@ import android.os.Build.VERSION;
 import android.os.Bundle;
 import android.view.Display;
 import android.view.KeyEvent;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.TabHost;
 import android.widget.TabWidget;
@@ -47,35 +48,31 @@ public class SlidingTabActivity extends ActivityGroup {
 	private int mDefaultTabIndex = -1;
 	private KeyTracker mKeyTracker = null;
 
-	public SlidingTabActivity() { 
-		if (Integer.parseInt(VERSION.SDK) < 5) {
-			mKeyTracker = new KeyTracker(new OnLongPressBackKeyTracker() {
-	
-				@Override
-				public void onLongPressBack(int keyCode, KeyEvent event,
-						Stage stage, int duration) {
-					onKeyLongPress(keyCode, event);
-				}
-	
-				@Override
-				public void onShortPressBack(int keyCode, KeyEvent event,
-						Stage stage, int duration) {
-					callSuperOnKeyDown(keyCode, event);
-				}
-				
-			});
-		}
-	}
-
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		// set display size
 		final Display display = getWindowManager().getDefaultDisplay(); 
-		ThumbSize.setScreenSize(display.getWidth(), display.getHeight());		
+		ThumbSize.setScreenSize(display.getWidth(), display.getHeight());
+
+		getActionBar().setDisplayHomeAsUpEnabled(true);
 	}
 	
 	protected void callSuperOnKeyDown(int keyCode, KeyEvent event) {
 		super.onKeyDown(keyCode, event);
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+			case android.R.id.home:
+				// app icon in action bar clicked; go home
+				Intent intent = new Intent(this, HomeActivity.class);
+				intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+				startActivity(intent);
+				return true;
+			default:
+				return super.onOptionsItemSelected(item);
+		}
 	}
 
 	/**

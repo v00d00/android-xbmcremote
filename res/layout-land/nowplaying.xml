@@ -42,7 +42,6 @@
                                 android:scaleType="centerCrop" android:id="@+id/fanart"  android:paddingTop="36dip"/>
 
 			<LinearLayout android:layout_width="fill_parent" android:layout_height="fill_parent" android:orientation="vertical">
-				<include layout="@layout/titlebar" />
 				<RelativeLayout android:layout_width="fill_parent" android:layout_height="fill_parent" android:orientation="horizontal">
 				
 				

@@ -4,9 +4,6 @@
 	android:layout_width="fill_parent"
 	android:layout_height="fill_parent"
 	android:orientation="vertical">
-	<include
-		layout="@layout/titlebar"
-		android:layout_weight="0" />
 	<ScrollView
 		android:layout_width="fill_parent"
 		android:layout_height="fill_parent"
