@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+    
+    <ImageView
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:cropToPadding="false"
+        android:scaleType="fitStart"
+        android:padding="4dp"
+        android:layout_alignParentLeft="true"
+        android:id="@+id/tli_poster"/>
+    
+    <TextView
+        android:id="@+id/tli_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/tli_poster"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tli_subtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/tli_title"
+        android:layout_toRightOf="@id/tli_poster"/>
+
+    <TextView
+        android:id="@+id/tli_bottomtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/tli_subtitle"
+        android:layout_toRightOf="@id/tli_poster" />
+</merge>

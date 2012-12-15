@@ -93,7 +93,7 @@ public class ArtistListController extends ListController implements IController 
 				public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 					if(isLoading()) return;
 					Intent nextActivity;
-					Artist artist = (Artist)mList.getAdapter().getItem(((OneLabelItemView)view).position);
+					Artist artist = (Artist)mList.getAdapter().getItem(((OneLabelItemView)view).getPosition());
 					nextActivity = new Intent(view.getContext(), MusicArtistActivity.class);
 					nextActivity.putExtra(ListController.EXTRA_LIST_CONTROLLER, new AlbumListController());
 					nextActivity.putExtra(ListController.EXTRA_ARTIST, artist);
@@ -130,7 +130,7 @@ public class ArtistListController extends ListController implements IController 
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
 		// be aware that this must be explicitly called by your activity!
-		final Artist artist = (Artist)mList.getAdapter().getItem(((OneLabelItemView)(((AdapterContextMenuInfo)menuInfo).targetView)).position);
+		final Artist artist = (Artist)mList.getAdapter().getItem(((OneLabelItemView)(((AdapterContextMenuInfo)menuInfo).targetView)).getPosition());
 		menu.setHeaderTitle(artist.name);
 		menu.add(0, ITEM_CONTEXT_QUEUE, 1, "Queue all songs from Artist");
 		menu.add(0, ITEM_CONTEXT_PLAY, 2, "Play all songs from Artist");
@@ -143,7 +143,7 @@ public class ArtistListController extends ListController implements IController 
 	
 	public void onContextItemSelected(MenuItem item) {
 		// be aware that this must be explicitly called by your activity!
-		final Artist artist = (Artist)mList.getAdapter().getItem(((OneLabelItemView)((AdapterContextMenuInfo)item.getMenuInfo()).targetView).position);
+		final Artist artist = (Artist)mList.getAdapter().getItem(((OneLabelItemView)((AdapterContextMenuInfo)item.getMenuInfo()).targetView).getPosition());
 		switch (item.getItemId()) {
 			case ITEM_CONTEXT_QUEUE:
 				mMusicManager.addToPlaylist(new QueryResponse(
@@ -200,8 +200,8 @@ public class ArtistListController extends ListController implements IController 
 			}
 			final Artist artist = this.getItem(position);
 			view.reset();
-			view.position = position;
-			view.title = artist.name;
+			view.setPosition(position);
+			view.setTitle(artist.name);
 			
 			if (mLoadCovers) {
 				view.getResponse().load(artist, !mPostScrollLoader.isListIdle());

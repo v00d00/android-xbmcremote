@@ -106,7 +106,7 @@ public class SeasonListController extends ListController implements IController 
 			mList.setOnItemClickListener(new OnItemClickListener() {
 				public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 					if (isLoading()) return;
-					final Season season = (Season) mList.getAdapter().getItem(((GridPosterItemView) view).position);
+					final Season season = (Season) mList.getAdapter().getItem(((GridPosterItemView) view).getPosition());
 					Intent nextActivity = new Intent(view.getContext(), ListActivity.class);
 					nextActivity.putExtra(ListController.EXTRA_SEASON, season);
 					nextActivity.putExtra(ListController.EXTRA_TVSHOW, mShow);
@@ -186,7 +186,7 @@ public class SeasonListController extends ListController implements IController 
 	public void onCreateContextMenu(ContextMenu menu, View v,
 			ContextMenuInfo menuInfo) {
 		final GridPosterItemView view = (GridPosterItemView) ((AdapterContextMenuInfo) menuInfo).targetView;
-		menu.setHeaderTitle(view.title);
+		menu.setHeaderTitle(view.getTitle());
 		menu.add(0, ITEM_CONTEXT_BROWSE, 1, "Browse Season");
 	}
 
@@ -195,7 +195,7 @@ public class SeasonListController extends ListController implements IController 
 		// (Season)mList.getAdapter().getItem(((GridPosterItemView)view).position);
 		final Season season = (Season) mList.getAdapter().getItem(
 				((GridPosterItemView) ((AdapterContextMenuInfo) item
-						.getMenuInfo()).targetView).position);
+						.getMenuInfo()).targetView).getPosition());
 		switch (item.getItemId()) {
 		case ITEM_CONTEXT_BROWSE:
 			Intent nextActivity = new Intent(mActivity, ListActivity.class);
@@ -270,8 +270,8 @@ public class SeasonListController extends ListController implements IController 
 
 			final Season season = getItem(position);
 			view.reset();
-			view.position = position;
-			view.title = season.getShortName();
+			view.setPosition(position);
+			view.setTitle(season.getShortName());
 
 			if (mLoadCovers) {
 				if (mTvManager.coverLoaded(season, mThumbSize)) {

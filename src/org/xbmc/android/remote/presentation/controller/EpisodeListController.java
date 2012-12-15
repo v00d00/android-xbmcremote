@@ -124,7 +124,7 @@ public class EpisodeListController extends ListController implements IController
 			mList.setOnItemClickListener(new OnItemClickListener() {
 				public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 					if(isLoading()) return;
-					final Episode episode = (Episode)mList.getAdapter().getItem(((FiveLabelsItemView)view).position);
+					final Episode episode = (Episode)mList.getAdapter().getItem(((FiveLabelsItemView)view).getPosition());
 					Intent nextActivity = new Intent(view.getContext(), EpisodeDetailsActivity.class);
 					nextActivity.putExtra(ListController.EXTRA_EPISODE, episode);
 					mActivity.startActivity(nextActivity);
@@ -195,13 +195,13 @@ public class EpisodeListController extends ListController implements IController
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
 		final FiveLabelsItemView view = (FiveLabelsItemView)((AdapterContextMenuInfo)menuInfo).targetView;
-		menu.setHeaderTitle(view.title);
+		menu.setHeaderTitle(view.getTitle());
 		menu.add(0, ITEM_CONTEXT_PLAY, 1, "Play Episode");
 		menu.add(0, ITEM_CONTEXT_INFO, 2, "View Details");
 	}
 	
 	public void onContextItemSelected(MenuItem item) {
-		final Episode episode = (Episode)mList.getAdapter().getItem(((FiveLabelsItemView)((AdapterContextMenuInfo)item.getMenuInfo()).targetView).position);
+		final Episode episode = (Episode)mList.getAdapter().getItem(((FiveLabelsItemView)((AdapterContextMenuInfo)item.getMenuInfo()).targetView).getPosition());
 		switch (item.getItemId()) {
 			case ITEM_CONTEXT_PLAY:
 				mControlManager.playFile(new DataResponse<Boolean>() {
@@ -312,9 +312,9 @@ public class EpisodeListController extends ListController implements IController
 			
 			final Episode episode = getItem(position);
 			view.reset();
-			view.position = position;
+			view.setPosition(position);
 			view.posterOverlay = episode.numWatched > 0 ? mWatchedBitmap : null;
-			view.title = episode.episode + ". " + episode.title;
+			view.setTitle(episode.episode + ". " + episode.title);
 //			view.subtitle = episode.;
 			view.subtitleRight = episode.firstAired!=null?episode.firstAired:"";
 //			view.bottomtitle = show.numEpisodes + " episodes";

@@ -67,7 +67,7 @@ public class MusicGenreListController extends ListController implements IControl
 				public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 					if(isLoading()) return;
 					Intent nextActivity;
-					Genre genre = (Genre)mList.getAdapter().getItem(((OneLabelItemView)view).position);
+					Genre genre = (Genre)mList.getAdapter().getItem(((OneLabelItemView)view).getPosition());
 					nextActivity = new Intent(view.getContext(), MusicGenreActivity.class);
 					nextActivity.putExtra(ListController.EXTRA_GENRE, genre);
 					nextActivity.putExtra(ListController.EXTRA_LIST_CONTROLLER, new SongListController());
@@ -102,7 +102,7 @@ public class MusicGenreListController extends ListController implements IControl
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
 		// be aware that this must be explicitly called by your activity!
-		final Genre genre = (Genre)mList.getAdapter().getItem(((OneLabelItemView)(((AdapterContextMenuInfo)menuInfo).targetView)).position);
+		final Genre genre = (Genre)mList.getAdapter().getItem(((OneLabelItemView)(((AdapterContextMenuInfo)menuInfo).targetView)).getPosition());
 		menu.setHeaderTitle(genre.name);
 		menu.add(0, ITEM_CONTEXT_QUEUE, 1, "Queue " + genre.name + " songs");
 		menu.add(0, ITEM_CONTEXT_PLAY, 2, "Play " + genre.name + " songs");
@@ -110,7 +110,7 @@ public class MusicGenreListController extends ListController implements IControl
 	
 	public void onContextItemSelected(MenuItem item) {
 		// be aware that this must be explicitly called by your activity!
-		final Genre genre = (Genre)mList.getAdapter().getItem(((OneLabelItemView)((AdapterContextMenuInfo)item.getMenuInfo()).targetView).position);
+		final Genre genre = (Genre)mList.getAdapter().getItem(((OneLabelItemView)((AdapterContextMenuInfo)item.getMenuInfo()).targetView).getPosition());
 		switch (item.getItemId()) {
 			case ITEM_CONTEXT_QUEUE:
 				mMusicManager.addToPlaylist(new QueryResponse(
@@ -143,8 +143,8 @@ public class MusicGenreListController extends ListController implements IControl
 			}
 			final Genre genre = this.getItem(position);
 			view.reset();
-			view.position = position;
-			view.title = genre.name;
+			view.setPosition(position);
+			view.setTitle(genre.name);
 			return view;
 		}
 	}

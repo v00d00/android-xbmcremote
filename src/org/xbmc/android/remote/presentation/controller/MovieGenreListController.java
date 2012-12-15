@@ -72,7 +72,7 @@ public class MovieGenreListController extends ListController implements IControl
 				public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 					if(isLoading()) return;
 					Intent nextActivity = new Intent(view.getContext(), ListActivity.class);
-					Genre genre = (Genre)mList.getAdapter().getItem(((OneLabelItemView)view).position);
+					Genre genre = (Genre)mList.getAdapter().getItem(((OneLabelItemView)view).getPosition());
 					if(mType == TYPE_MOVIE)
 						nextActivity.putExtra(ListController.EXTRA_LIST_CONTROLLER, new MovieListController());
 					else
@@ -126,8 +126,8 @@ public class MovieGenreListController extends ListController implements IControl
 			}
 			final Genre genre = this.getItem(position);
 			view.reset();
-			view.position = position;
-			view.title = genre.name;
+			view.setPosition(position);
+			view.setTitle(genre.name);
 			return view;
 		}
 	}

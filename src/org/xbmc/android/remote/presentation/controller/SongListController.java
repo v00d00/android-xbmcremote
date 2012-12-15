@@ -122,7 +122,7 @@ public class SongListController extends ListController implements IController {
 			mList.setOnItemClickListener(new OnItemClickListener() {
 				public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 					if(isLoading()) return;
-					final Song song = (Song)mList.getAdapter().getItem(((ThreeLabelsItemView)view).position);
+					final Song song = (Song)mList.getAdapter().getItem(((ThreeLabelsItemView)view).getPosition());
 					final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mActivity.getApplicationContext());
 					final int SelectionType = Integer.parseInt(prefs.getString(PREF_DEFAULT_SELECTION_ACTION, DEFAULT_ACTION_PLAY));
 					switch (SelectionType) {
@@ -201,7 +201,7 @@ public class SongListController extends ListController implements IController {
 	
 	public void onContextItemSelected(MenuItem item) {
 		// be aware that this must be explicitly called by your activity!
-		final Song song = (Song)mList.getAdapter().getItem(((ThreeLabelsItemView)((AdapterContextMenuInfo)item.getMenuInfo()).targetView).position);
+		final Song song = (Song)mList.getAdapter().getItem(((ThreeLabelsItemView)((AdapterContextMenuInfo)item.getMenuInfo()).targetView).getPosition());
 		switch (item.getItemId()) {
 			case ITEM_CONTEXT_QUEUE:
 				if (mAlbum == null) {
@@ -350,8 +350,8 @@ public class SongListController extends ListController implements IController {
 			
 			final Song song = getItem(position);
 			view.reset();
-			view.position = position;
-			view.title = song.title;
+			view.setPosition(position);
+			view.setTitle(song.title);
 			if (mAlbum != null) {
 				view.subtitle = song.artist;
 			} else if (mArtist != null) {

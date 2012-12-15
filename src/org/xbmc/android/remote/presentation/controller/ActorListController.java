@@ -119,7 +119,7 @@ public class ActorListController extends ListController implements IController {
 				public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 					if(isLoading()) return;
 					Intent nextActivity;
-					final Actor actor = (Actor)mList.getAdapter().getItem(((OneLabelItemView)view).position);
+					final Actor actor = (Actor)mList.getAdapter().getItem(((OneLabelItemView)view).getPosition());
 					nextActivity = new Intent(view.getContext(), ListActivity.class);
 					if(mType == TYPE_TVSHOW)
 						nextActivity.putExtra(ListController.EXTRA_LIST_CONTROLLER, new TvShowListController());
@@ -145,8 +145,8 @@ public class ActorListController extends ListController implements IController {
 			}
 			final Actor actor = this.getItem(position);
 			view.reset();
-			view.position = position;
-			view.title = actor.name;
+			view.setPosition(position);
+			view.setTitle(actor.name);
 			
 			if (mLoadCovers) {
 				if(mVideoManager.coverLoaded(actor, mThumbSize)){

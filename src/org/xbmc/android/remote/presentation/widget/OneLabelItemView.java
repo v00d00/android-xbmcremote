@@ -1,54 +1,56 @@
 package org.xbmc.android.remote.presentation.widget;
 
+import org.xbmc.android.remote.R;
+import org.xbmc.api.business.CoverResponse;
 import org.xbmc.api.business.IManager;
 import org.xbmc.api.type.ThumbSize;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint.Align;
-import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
+import android.os.Handler;
+import android.view.LayoutInflater;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 public class OneLabelItemView extends AbstractItemView {
+
+	private ImageView posterView;
+	private TextView titleView;
 	
-	private final int posterWidth, posterHeight;
-	private final Rect posterRect;
+	/**
+	 * Draws text labels for portrait text view
+	 * <pre>
+	 * ,-----.
+	 * |     |
+	 * |     | title (big)
+	 * |     |
+	 * `-----'
+	 * </pre>
+     */
 	
 	public OneLabelItemView(Context context, IManager manager, int width, Bitmap defaultCover, Drawable selection, boolean fixedSize) {
 		super(context, manager, width, defaultCover, selection, ThumbSize.SMALL, fixedSize);
-		posterWidth = ThumbSize.getPixel(ThumbSize.SMALL, fixedSize);
-		posterHeight = posterWidth;
-		posterRect = new Rect(0, 0, posterWidth, posterHeight);
+		
+		final LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+	    inflater.inflate(R.layout.one_label_item, this, true);
+	    
+	    posterView = (ImageView) findViewById(R.id.oli_poster);
+	    titleView = (TextView) findViewById(R.id.oli_title);
 	}
 	
 	public OneLabelItemView(Context context, int width, Bitmap defaultCover, Drawable selection, boolean fixedSize) {
 		this(context, null, width, defaultCover, selection, fixedSize);
 	}
-
-	@Override
-	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-		setMeasuredDimension(mWidth, posterHeight);
+	
+	public void reset() {
 	}
 	
-	protected void onDraw(Canvas canvas) {
-		final int width = mWidth;
-		PAINT.setTextAlign(Align.LEFT);
+	public void setCover(Bitmap cover) {
+		/* HACK for compat */
+		titleView.setText(title);
 		
-		drawPoster(canvas, posterWidth, posterHeight, width);
-
-		// label
-		PAINT.setAntiAlias(true);
-		if (title != null) {
-			PAINT.setColor(isSelected() || isPressed() ? Color.WHITE : Color.BLACK);
-			PAINT.setTextSize(size18);
-			canvas.drawText(title, posterWidth + padding, size35, PAINT);
-		}
-	}
-
-	@Override
-	protected Rect getPosterRect() {
-		return posterRect;
+		posterView.setImageBitmap(cover);
 	}
 }

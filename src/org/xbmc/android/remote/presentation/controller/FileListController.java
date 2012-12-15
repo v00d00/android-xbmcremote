@@ -155,8 +155,8 @@ public class FileListController extends ListController implements IController {
 			}
 			final FileLocation fileItem = this.getItem(position);
 			view.reset();
-			view.position = position;
-			view.title = fileItem.name;
+			view.setPosition(position);
+			view.setTitle(fileItem.name);
 			final Resources res = mActivity.getResources();
 			if (fileItem.isArchive) {
 				view.setCover(BitmapFactory.decodeResource(res, R.drawable.icon_zip));
@@ -232,7 +232,7 @@ public class FileListController extends ListController implements IController {
 	@Override
 	public void onContextItemSelected(MenuItem item) {
 		// be aware that this must be explicitly called by your activity!
-		final FileLocation loc = (FileLocation) mList.getAdapter().getItem(((OneLabelItemView)((AdapterContextMenuInfo)item.getMenuInfo()).targetView).position);
+		final FileLocation loc = (FileLocation) mList.getAdapter().getItem(((OneLabelItemView)((AdapterContextMenuInfo)item.getMenuInfo()).targetView).getPosition());
 		switch(item.getItemId()) {
 		case ITEM_CONTEXT_QUEUE:
 			mControlManager.queueFolder(new QueryResponse(mActivity, "Queueing folder " + loc.path, "Error queueing folder."), loc.path, MediaType.getPlaylistType(mMediaType), mActivity);

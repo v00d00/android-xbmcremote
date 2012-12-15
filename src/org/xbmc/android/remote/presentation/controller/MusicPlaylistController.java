@@ -135,7 +135,7 @@ public class MusicPlaylistController extends ListController implements IControll
 	  	  	}, mActivity.getApplicationContext());
 			mList.setOnItemClickListener(new OnItemClickListener() {
 				public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-					final PlaylistItem item = (PlaylistItem)mList.getAdapter().getItem(((OneLabelItemView)view).position);
+					final PlaylistItem item = (PlaylistItem)mList.getAdapter().getItem(((OneLabelItemView)view).getPosition());
 					final DataResponse<Boolean> doNothing = new DataResponse<Boolean>();
 					mControlManager.setPlaylistId(doNothing, mPlayListId < 0 ? 0 : mPlayListId, mActivity.getApplicationContext());
 					mMusicManager.setPlaylistSong(doNothing, item.position, mActivity.getApplicationContext());
@@ -243,7 +243,7 @@ public class MusicPlaylistController extends ListController implements IControll
 			OneLabelItemView view = adapter.getViewAtPosition(currentPos);
 			if (currentPos >= 0 && view != null) {
 				view.setCover(BitmapFactory.decodeResource(mActivity.getResources(), R.drawable.icon_song_light));
-				Log.i(TAG, "Resetting previous icon at position " + currentPos + " (" + view.title + ")");
+				Log.i(TAG, "Resetting previous icon at position " + currentPos + " (" + view.getTitle() + ")");
 			} else {
 				Log.i(TAG, "NOT resetting previous icon at position " + currentPos);
 			}
@@ -272,7 +272,7 @@ public class MusicPlaylistController extends ListController implements IControll
 	
 	public void onContextItemSelected(MenuItem item) {
 		// be aware that this must be explicitly called by your activity!
-		final PlaylistItem playlistItem = (PlaylistItem)mList.getAdapter().getItem(((OneLabelItemView)((AdapterContextMenuInfo)item.getMenuInfo()).targetView).position);
+		final PlaylistItem playlistItem = (PlaylistItem)mList.getAdapter().getItem(((OneLabelItemView)((AdapterContextMenuInfo)item.getMenuInfo()).targetView).getPosition());
 		switch (item.getItemId()) {
 			case ITEM_CONTEXT_PLAY:
 				mMusicManager.setPlaylistSong(new DataResponse<Boolean>(), playlistItem.position, mActivity.getApplicationContext());
@@ -304,18 +304,18 @@ public class MusicPlaylistController extends ListController implements IControll
 				view = new OneLabelItemView(mActivity, parent.getWidth(), mFallbackBitmap, mList.getSelector(), true);
 			} else {
 				view = (OneLabelItemView)convertView;
-				mItemPositions.remove(view.position);
+				mItemPositions.remove(view.getPosition());
 			}
 			final PlaylistItem item = this.getItem(position);
 			view.reset();
-			view.position = position;
-			view.title = item.filename;
+			view.setPosition(position);
+			view.setTitle(item.filename);
 			if (position == mCurrentPosition) {
 				view.setCover(sPlayingBitmap);
 			} else {
 				view.setCover(mFallbackBitmap);
 			}
-			mItemPositions.put(view.position, view);
+			mItemPositions.put(view.getPosition(), view);
 			return view;
 		}
 		public OneLabelItemView getViewAtPosition(int position) {

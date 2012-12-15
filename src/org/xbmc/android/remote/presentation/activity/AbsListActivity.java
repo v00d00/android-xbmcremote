@@ -57,26 +57,6 @@ public abstract class AbsListActivity extends Activity {
 
 	ListController mListController;
 	private KeyTracker mKeyTracker;
-	
-	public AbsListActivity() {
-		if(Integer.parseInt(VERSION.SDK) < 5) {
-			mKeyTracker = new KeyTracker(new OnLongPressBackKeyTracker() {
-	
-				@Override
-				public void onLongPressBack(int keyCode, KeyEvent event,
-						Stage stage, int duration) {
-					onKeyLongPress(keyCode, event);
-				}
-	
-				@Override
-				public void onShortPressBack(int keyCode, KeyEvent event,
-						Stage stage, int duration) {
-					callSuperOnKeyDown(keyCode, event);
-				}
-				
-			});
-		}
-	}
 
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);

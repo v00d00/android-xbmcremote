@@ -168,7 +168,7 @@ public class AlbumListController extends ListController implements IController {
 				public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 					if(isLoading()) return;
 					Intent nextActivity;
-					final Album album = (Album)mList.getAdapter().getItem(((ThreeLabelsItemView)view).position);
+					final Album album = (Album)mList.getAdapter().getItem(((ThreeLabelsItemView)view).getPosition());
 					nextActivity = new Intent(view.getContext(), ListActivity.class);
 					nextActivity.putExtra(ListController.EXTRA_LIST_CONTROLLER, new SongListController());
 					nextActivity.putExtra(ListController.EXTRA_ALBUM, album);
@@ -268,7 +268,7 @@ public class AlbumListController extends ListController implements IController {
 	}
 	
 	public void onContextItemSelected(MenuItem item) {
-		final Album album = (Album)mList.getAdapter().getItem(((ThreeLabelsItemView)((AdapterContextMenuInfo)item.getMenuInfo()).targetView).position);
+		final Album album = (Album)mList.getAdapter().getItem(((ThreeLabelsItemView)((AdapterContextMenuInfo)item.getMenuInfo()).targetView).getPosition());
 		switch (item.getItemId()) {
 			case ITEM_CONTEXT_QUEUE:
 				mMusicManager.addToPlaylist(new QueryResponse(
@@ -456,8 +456,8 @@ public class AlbumListController extends ListController implements IController {
 			
 			final Album album = getItem(position);
 			view.reset();
-			view.position = position;
-			view.title = album.name;
+			view.setPosition(position);
+			view.setTitle(album.name);
 			view.subtitle = album.artist;
 			view.subsubtitle = album.year > 0 ? String.valueOf(album.year) : "";
 			Log.i(TAG, "isListIdle: " + mPostScrollLoader.isListIdle());

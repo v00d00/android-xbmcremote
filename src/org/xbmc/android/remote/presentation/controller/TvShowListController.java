@@ -122,7 +122,7 @@ public class TvShowListController extends ListController implements IController 
 			mList.setOnItemClickListener(new OnItemClickListener() {
 				public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 					if(isLoading()) return;
-					final TvShow show = (TvShow)mList.getAdapter().getItem(((FiveLabelsItemView)view).position);
+					final TvShow show = (TvShow)mList.getAdapter().getItem(((FiveLabelsItemView)view).getPosition());
 					Intent nextActivity = new Intent(view.getContext(), GridActivity.class);
 					nextActivity.putExtra(ListController.EXTRA_TVSHOW, show);
 					nextActivity.putExtra(ListController.EXTRA_LIST_CONTROLLER, new SeasonListController());
@@ -199,14 +199,14 @@ public class TvShowListController extends ListController implements IController 
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
 		final FiveLabelsItemView view = (FiveLabelsItemView)((AdapterContextMenuInfo)menuInfo).targetView;
-		menu.setHeaderTitle(view.title);
+		menu.setHeaderTitle(view.getTitle());
 		menu.add(0, ITEM_CONTEXT_BROWSE, 1, "Browse TV Show");
 		menu.add(0, ITEM_CONTEXT_INFO, 2, "View Details");
 		menu.add(0, ITEM_CONTEXT_IMDB, 3, "Open IMDb");
 	}
 	
 	public void onContextItemSelected(MenuItem item) {
-		final TvShow show = (TvShow)mList.getAdapter().getItem(((FiveLabelsItemView)((AdapterContextMenuInfo)item.getMenuInfo()).targetView).position);
+		final TvShow show = (TvShow)mList.getAdapter().getItem(((FiveLabelsItemView)((AdapterContextMenuInfo)item.getMenuInfo()).targetView).getPosition());
 		switch (item.getItemId()) {
 			case ITEM_CONTEXT_BROWSE:
 				Intent browseActivity = new Intent(mActivity, GridActivity.class);
@@ -324,9 +324,9 @@ public class TvShowListController extends ListController implements IController 
 
 			final TvShow show = getItem(position);
 			view.reset();
-			view.position = position;
+			view.setPosition(position);
 			view.posterOverlay = show.watched ? mWatchedBitmap : null;
-			view.title = show.title;
+			view.setTitle(show.title);
 			view.subtitle = StringUtil.join(",", show.genre);
 			view.subtitleRight = show.firstAired != null ? show.firstAired : "";
 			view.bottomtitle = show.numEpisodes + " episodes";

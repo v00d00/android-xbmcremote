@@ -130,7 +130,7 @@ public class MovieListController extends ListController implements IController {
 			mList.setOnItemClickListener(new OnItemClickListener() {
 				public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 					if(isLoading()) return;
-					final Movie movie = (Movie)mList.getAdapter().getItem(((FiveLabelsItemView)view).position);
+					final Movie movie = (Movie)mList.getAdapter().getItem(((FiveLabelsItemView)view).getPosition());
 					Intent nextActivity = new Intent(view.getContext(), MovieDetailsActivity.class);
 					nextActivity.putExtra(ListController.EXTRA_MOVIE, movie);
 					mActivity.startActivity(nextActivity);
@@ -202,14 +202,14 @@ public class MovieListController extends ListController implements IController {
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
 		final FiveLabelsItemView view = (FiveLabelsItemView)((AdapterContextMenuInfo)menuInfo).targetView;
-		menu.setHeaderTitle(view.title);
+		menu.setHeaderTitle(view.getTitle());
 		menu.add(0, ITEM_CONTEXT_PLAY, 1, "Play Movie");
 		menu.add(0, ITEM_CONTEXT_INFO, 2, "View Details");
 		menu.add(0, ITEM_CONTEXT_IMDB, 3, "Open IMDb");
 	}
 	
 	public void onContextItemSelected(MenuItem item) {
-		final Movie movie = (Movie)mList.getAdapter().getItem(((FiveLabelsItemView)((AdapterContextMenuInfo)item.getMenuInfo()).targetView).position);
+		final Movie movie = (Movie)mList.getAdapter().getItem(((FiveLabelsItemView)((AdapterContextMenuInfo)item.getMenuInfo()).targetView).getPosition());
 		switch (item.getItemId()) {
 			case ITEM_CONTEXT_PLAY:
 				mControlManager.playFile(new DataResponse<Boolean>() {
@@ -359,9 +359,9 @@ public class MovieListController extends ListController implements IController {
 			
 			final Movie movie = getItem(position);
 			view.reset();
-			view.position = position;
+			view.setPosition(position);
 			view.posterOverlay = movie.numWatched > 0 ? mWatchedBitmap : null;
-			view.title = movie.title;
+			view.setTitle(movie.title);
 			view.subtitle = StringUtil.join(" / ", movie.genres);
 			view.subtitleRight = movie.year > 0 ? String.valueOf(movie.year) : "";
 			view.bottomtitle = movie.runtime;

@@ -1,64 +1,59 @@
 package org.xbmc.android.remote.presentation.widget;
 
+import org.xbmc.android.remote.R;
 import org.xbmc.api.business.IManager;
-import org.xbmc.api.type.ThumbSize;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint.Align;
-import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
+import android.view.LayoutInflater;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 public class ThreeLabelsItemView extends AbstractItemView {
 
+	public Bitmap posterOverlay;
 	public String subtitle;
 	public String subsubtitle;
 	
-	private final int posterWidth, posterHeight;
-	private final Rect posterRect;
-
+	private ImageView posterView;
+	private TextView titleView;
+	private TextView subtitleView;
+	private TextView bottomtitleView;
+	
+	
+	/**
+	 * Draws text labels for portrait text view
+	 * <pre>
+	 * ,-----. 
+	 * |     | title (big)
+	 * |     | subtitle
+	 * |     | bottomtitle
+	 * `-----'
+	 * </pre>
+     */
+	
 	public ThreeLabelsItemView(Context context, IManager manager, int width, Bitmap defaultCover, Drawable selection, boolean fixedSize) {
-		super(context, manager, width, defaultCover, selection, ThumbSize.SMALL, fixedSize);
-
-		posterWidth = ThumbSize.getPixel(ThumbSize.SMALL, fixedSize);
-		posterHeight = posterWidth;
-		posterRect = new Rect(0, 0, posterWidth, posterHeight);
-	}
-
-	@Override
-	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-		setMeasuredDimension(mWidth, posterHeight);
+		super(context, manager, width, defaultCover, selection, width, fixedSize);
+		
+		final LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+	    inflater.inflate(R.layout.three_labels_item, this, true);
+	    
+	    posterView = (ImageView) findViewById(R.id.tli_poster);
+	    titleView = (TextView) findViewById(R.id.tli_title);
+	    subtitleView = (TextView) findViewById(R.id.tli_subtitle);
+	    bottomtitleView = (TextView) findViewById(R.id.tli_bottomtitle);
 	}
 	
-	@Override
-	protected void onDraw(Canvas canvas) {
-		final int width = mWidth;
-		PAINT.setTextAlign(Align.LEFT);
-		
-		drawPoster(canvas, posterWidth, posterHeight, width);
-		
-		// text
-		PAINT.setAntiAlias(true);
-		if (title != null) {
-			PAINT.setColor(isSelected() || isPressed() ? Color.WHITE : Color.BLACK);
-			PAINT.setTextSize(size18);
-			canvas.drawText(ellipse(title, width - size50 - padding), posterWidth + padding, size25, PAINT);
-		}
-		PAINT.setColor(isSelected() || isPressed() ? Color.WHITE : Color.rgb(80, 80, 80));
-		PAINT.setTextSize(size12);
-		if (subtitle != null) {
-			canvas.drawText(subtitle, posterWidth + padding, size42, PAINT);
-		}
-		if (subsubtitle != null) {
-			PAINT.setTextAlign(Align.RIGHT);
-			canvas.drawText(subsubtitle, width - padding, size42, PAINT);
-		}
+	public void reset() {
 	}
-
-	@Override
-	protected Rect getPosterRect() {
-		return posterRect;
+	
+	public void setCover(Bitmap cover) {
+		/* HACK for compat */
+		titleView.setText(title);
+		subtitleView.setText(subtitle);
+		bottomtitleView.setText(subsubtitle);
+		
+		posterView.setImageBitmap(cover);
 	}
 }

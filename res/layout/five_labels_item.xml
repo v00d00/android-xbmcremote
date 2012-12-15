@@ -7,8 +7,8 @@
         android:layout_width="64dp"
         android:layout_height="64dp"
         android:cropToPadding="false"
-        android:scaleType="centerCrop"
-        android:layout_margin="4dp"
+        android:scaleType="fitStart"
+        android:padding="4dp"
         android:layout_alignParentLeft="true"
         android:id="@+id/fli_poster"/>
     
@@ -16,7 +16,8 @@
         android:id="@+id/fli_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toRightOf="@id/fli_poster" />
+        android:layout_toRightOf="@id/fli_poster"
+        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/fli_subtitle"
