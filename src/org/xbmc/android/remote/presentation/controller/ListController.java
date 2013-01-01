@@ -96,7 +96,8 @@ public abstract class ListController extends AbstractController implements Seria
 	 * @return
 	 */
 	protected IdleListener setupIdleListener() {
-		return setupIdleListener(ThumbSize.SMALL);
+		/* TODO: Hook this back up */
+		return null;
 	}
 	
 	/**

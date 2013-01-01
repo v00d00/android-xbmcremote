@@ -83,7 +83,7 @@ public class MusicGenreListController extends ListController implements IControl
 				public void run() {
 					if (value.size() > 0) {
 						setTitle(title + " (" + value.size() + ")");
-						((ListView)mList).setAdapter(new GenreAdapter(mActivity, value));
+						((AbsListView)mList).setAdapter(new GenreAdapter(mActivity, value));
 					} else {
 						setTitle(title);
 						setNoDataMessage("No genres found.", R.drawable.icon_genre_dark);

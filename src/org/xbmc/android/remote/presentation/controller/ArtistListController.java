@@ -27,6 +27,7 @@ import org.xbmc.android.remote.R;
 import org.xbmc.android.remote.business.ManagerFactory;
 import org.xbmc.android.remote.presentation.activity.DialogFactory;
 import org.xbmc.android.remote.presentation.activity.MusicArtistActivity;
+import org.xbmc.android.remote.presentation.widget.AlbumGridItem;
 import org.xbmc.android.remote.presentation.widget.OneLabelItemView;
 import org.xbmc.android.util.ImportUtilities;
 import org.xbmc.api.business.DataResponse;
@@ -51,6 +52,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
+import android.widget.GridView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -74,63 +76,61 @@ public class ArtistListController extends ListController implements IController 
 		
 		final String sdError = ImportUtilities.assertSdCard();
 		mLoadCovers = sdError == null;
-		
-		if (!isCreated()) {
-			super.onCreate(activity, handler, list);
-			
-			if (!mLoadCovers) {
-				Toast toast = Toast.makeText(activity, sdError + " Displaying place holders only.", Toast.LENGTH_LONG);
-				toast.show();
-			}
-			
-			mGenre = (Genre)mActivity.getIntent().getSerializableExtra(ListController.EXTRA_GENRE);
-			
-			mFallbackBitmap = BitmapFactory.decodeResource(mActivity.getResources(), R.drawable.icon_artist);
-			setupIdleListener();
-			
-			activity.registerForContextMenu(mList);
-			mList.setOnItemClickListener(new OnItemClickListener() {
-				public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-					if(isLoading()) return;
-					Intent nextActivity;
-					Artist artist = (Artist)mList.getAdapter().getItem(((OneLabelItemView)view).getPosition());
-					nextActivity = new Intent(view.getContext(), MusicArtistActivity.class);
-					nextActivity.putExtra(ListController.EXTRA_LIST_CONTROLLER, new AlbumListController());
-					nextActivity.putExtra(ListController.EXTRA_ARTIST, artist);
-					mActivity.startActivity(nextActivity);
-				}
-			});
 					
-			final String title = mGenre != null ? mGenre.name + " - " : "" + "Artists";
-			DataResponse<ArrayList<Artist>> response = new DataResponse<ArrayList<Artist>>() {
-				@SuppressLint("")
-				public void run() {
-					if (value.size() > 0) {
-						setTitle(title + " (" + value.size() + ")");
-						((ListView)mList).setAdapter(new ArtistAdapter(mActivity, value));
-					} else {
-						setTitle(title);
-						setNoDataMessage("No artists found.", R.drawable.icon_artist_dark);
-					}
-				}
-			};
-
-			mList.setOnKeyListener(new ListControllerOnKeyListener<Artist>());	
-			
-			showOnLoading();
-			setTitle(title + "...");			
-			if (mGenre != null) {
-				mMusicManager.getArtists(response, mGenre, mActivity.getApplicationContext());
-			} else {
-				mMusicManager.getArtists(response, mActivity.getApplicationContext());
+		super.onCreate(activity, handler, list);
+		
+		if (!mLoadCovers) {
+			Toast toast = Toast.makeText(activity, sdError + " Displaying place holders only.", Toast.LENGTH_LONG);
+			toast.show();
+		}
+		
+		mGenre = (Genre)mActivity.getIntent().getSerializableExtra(ListController.EXTRA_GENRE);
+		
+		mFallbackBitmap = BitmapFactory.decodeResource(mActivity.getResources(), R.drawable.icon_artist);
+		setupIdleListener();
+		
+		activity.registerForContextMenu(mList);
+		mList.setOnItemClickListener(new OnItemClickListener() {
+			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+				if(isLoading()) return;
+				Intent nextActivity;
+				Artist artist = (Artist)mList.getAdapter().getItem(((AlbumGridItem)view).getPosition());
+				nextActivity = new Intent(view.getContext(), MusicArtistActivity.class);
+				nextActivity.putExtra(ListController.EXTRA_LIST_CONTROLLER, new AlbumListController());
+				nextActivity.putExtra(ListController.EXTRA_ARTIST, artist);
+				mActivity.startActivity(nextActivity);
 			}
+		});
+				
+		final String title = mGenre != null ? mGenre.name + " - " : "" + "Artists";
+		DataResponse<ArrayList<Artist>> response = new DataResponse<ArrayList<Artist>>() {
+			@SuppressLint("")
+			public void run() {
+				if (value.size() > 0) {
+					setTitle(title + " (" + value.size() + ")");
+					((AbsListView)mList).setAdapter(new ArtistAdapter(mActivity, value));
+				} else {
+					setTitle(title);
+					setNoDataMessage("No artists found.", R.drawable.icon_artist_dark);
+				}
+			}
+		};
+
+		mList.setOnKeyListener(new ListControllerOnKeyListener<Artist>());	
+		
+		showOnLoading();
+		setTitle(title + "...");			
+		if (mGenre != null) {
+			mMusicManager.getArtists(response, mGenre, mActivity.getApplicationContext());
+		} else {
+			mMusicManager.getArtists(response, mActivity.getApplicationContext());
 		}
 	}
 	
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
 		// be aware that this must be explicitly called by your activity!
-		final Artist artist = (Artist)mList.getAdapter().getItem(((OneLabelItemView)(((AdapterContextMenuInfo)menuInfo).targetView)).getPosition());
+		final Artist artist = (Artist)mList.getAdapter().getItem(((AlbumGridItem)(((AdapterContextMenuInfo)menuInfo).targetView)).getPosition());
 		menu.setHeaderTitle(artist.name);
 		menu.add(0, ITEM_CONTEXT_QUEUE, 1, "Queue all songs from Artist");
 		menu.add(0, ITEM_CONTEXT_PLAY, 2, "Play all songs from Artist");
@@ -143,7 +143,7 @@ public class ArtistListController extends ListController implements IController 
 	
 	public void onContextItemSelected(MenuItem item) {
 		// be aware that this must be explicitly called by your activity!
-		final Artist artist = (Artist)mList.getAdapter().getItem(((OneLabelItemView)((AdapterContextMenuInfo)item.getMenuInfo()).targetView).getPosition());
+		final Artist artist = (Artist)mList.getAdapter().getItem(((AlbumGridItem)((AdapterContextMenuInfo)item.getMenuInfo()).targetView).getPosition());
 		switch (item.getItemId()) {
 			case ITEM_CONTEXT_QUEUE:
 				mMusicManager.addToPlaylist(new QueryResponse(
@@ -192,26 +192,22 @@ public class ArtistListController extends ListController implements IController 
 			super(activity, 0, items);
 		}
 		public View getView(int position, View convertView, ViewGroup parent) {
-			final OneLabelItemView view;
+			final AlbumGridItem view;
 			if (convertView == null) {
-				view = new OneLabelItemView(mActivity, mMusicManager, parent.getWidth(), mFallbackBitmap, mList.getSelector(), false);
+				view = new AlbumGridItem(mActivity);
 			} else {
-				view = (OneLabelItemView)convertView;
+				view = (AlbumGridItem)convertView;
 			}
 			final Artist artist = this.getItem(position);
-			view.reset();
 			view.setPosition(position);
 			view.setTitle(artist.name);
 			
-			if (mLoadCovers) {
-				view.getResponse().load(artist, !mPostScrollLoader.isListIdle());
-			}
 			if (mLoadCovers) {
 				if(mMusicManager.coverLoaded(artist, mThumbSize)){
 					view.setCover(mMusicManager.getCoverSync(artist, mThumbSize));
 				}else{
 					view.setCover(null);
-					view.getResponse().load(artist, !mPostScrollLoader.isListIdle());
+					//view.getResponse().load(artist, !mPostScrollLoader.isListIdle());
 				}
 			}
 

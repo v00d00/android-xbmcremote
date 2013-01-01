@@ -29,7 +29,7 @@ import org.xbmc.android.remote.business.AbstractManager;
 import org.xbmc.android.remote.business.ManagerFactory;
 import org.xbmc.android.remote.presentation.activity.DialogFactory;
 import org.xbmc.android.remote.presentation.activity.ListActivity;
-import org.xbmc.android.remote.presentation.widget.ThreeLabelsItemView;
+import org.xbmc.android.remote.presentation.widget.AlbumGridItem;
 import org.xbmc.android.util.ImportUtilities;
 import org.xbmc.api.business.DataResponse;
 import org.xbmc.api.business.IControlManager;
@@ -52,7 +52,6 @@ import android.content.SharedPreferences;
 import android.graphics.BitmapFactory;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
@@ -75,7 +74,7 @@ import android.widget.Toast;
 @SuppressLint("")
 public class AlbumListController extends ListController implements IController {
 	
-	private static final int mThumbSize = ThumbSize.SMALL;
+	private static final int mThumbSize = ThumbSize.MEDIUM;
 
 	private static final String TAG = "AlbumListController";
 	
@@ -118,7 +117,15 @@ public class AlbumListController extends ListController implements IController {
 	private boolean mLoadCovers = false;
 
 	private GridView mGrid = null;
+
+	public AlbumListController() {
+		super();
+	}
 	
+	public AlbumListController(boolean compilationsOnly) {
+		super();
+		mCompilationsOnly = compilationsOnly;
+	}
 	
 	/**
 	 * Defines if only compilations should be listed.
@@ -149,41 +156,39 @@ public class AlbumListController extends ListController implements IController {
 		final String sdError = ImportUtilities.assertSdCard();
 		mLoadCovers = sdError == null;
 
-		if (!isCreated()) {
-			super.onCreate(activity, handler, list);
+		super.onCreate(activity, handler, list);
 
-			if (!mLoadCovers) {
-				Toast toast = Toast.makeText(activity, sdError + " Displaying place holders only.", Toast.LENGTH_LONG);
-				toast.show();
-			}
-			
-			mArtist = (Artist)activity.getIntent().getSerializableExtra(ListController.EXTRA_ARTIST);
-			mGenre = (Genre)activity.getIntent().getSerializableExtra(ListController.EXTRA_GENRE);
-			activity.registerForContextMenu(mList);
-			
-			mFallbackBitmap = BitmapFactory.decodeResource(activity.getResources(), R.drawable.default_album);
-			setupIdleListener();
-			
-			mList.setOnItemClickListener(new OnItemClickListener() {
-				public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-					if(isLoading()) return;
-					Intent nextActivity;
-					final Album album = (Album)mList.getAdapter().getItem(((ThreeLabelsItemView)view).getPosition());
-					nextActivity = new Intent(view.getContext(), ListActivity.class);
-					nextActivity.putExtra(ListController.EXTRA_LIST_CONTROLLER, new SongListController());
-					nextActivity.putExtra(ListController.EXTRA_ALBUM, album);
-					mActivity.startActivity(nextActivity);
-				}
-			});
-			mList.setOnKeyListener(new ListControllerOnKeyListener<Album>());
-			fetch();
+		if (!mLoadCovers) {
+			Toast toast = Toast.makeText(activity, sdError + " Displaying place holders only.", Toast.LENGTH_LONG);
+			toast.show();
 		}
+		
+		mArtist = (Artist)activity.getIntent().getSerializableExtra(ListController.EXTRA_ARTIST);
+		mGenre = (Genre)activity.getIntent().getSerializableExtra(ListController.EXTRA_GENRE);
+		activity.registerForContextMenu(mList);
+		
+		mFallbackBitmap = BitmapFactory.decodeResource(activity.getResources(), R.drawable.default_album);
+		//setupIdleListener();
+		
+		mList.setOnItemClickListener(new OnItemClickListener() {
+			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+				if(isLoading()) return;
+				Intent nextActivity;
+				final Album album = (Album)mList.getAdapter().getItem(((AlbumGridItem)view).getPosition());
+				nextActivity = new Intent(view.getContext(), ListActivity.class);
+				nextActivity.putExtra(ListController.EXTRA_LIST_CONTROLLER, new SongListController());
+				nextActivity.putExtra(ListController.EXTRA_ALBUM, album);
+				mActivity.startActivity(nextActivity);
+			}
+		});
+		mList.setOnKeyListener(new ListControllerOnKeyListener<Album>());
+		fetch();
 	}
 	
 	private void setAdapter(ArrayList<Album> value) {
 		switch (mCurrentView) {
 			case VIEW_LIST:
-				((ListView)mList).setAdapter(new AlbumAdapter(mActivity, value));
+				((AbsListView)mList).setAdapter(new AlbumAdapter(mActivity, value));
 				mList.setVisibility(View.VISIBLE);
 				if (mGrid != null) {
 					mGrid.setVisibility(View.GONE);
@@ -191,7 +196,7 @@ public class AlbumListController extends ListController implements IController {
 				break;
 			case VIEW_GRID:
 				if (mGrid != null) {
-					((GridView)mGrid).setAdapter(new AlbumGridAdapter(mActivity, value));
+					((AbsListView)mGrid).setAdapter(new AlbumGridAdapter(mActivity, value));
 					mGrid.setVisibility(View.VISIBLE);
 					mList.setVisibility(View.GONE);
 				} else {
@@ -260,7 +265,7 @@ public class AlbumListController extends ListController implements IController {
 	
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
-		final ThreeLabelsItemView view = (ThreeLabelsItemView)((AdapterContextMenuInfo)menuInfo).targetView;
+		final AlbumGridItem view = (AlbumGridItem)((AdapterContextMenuInfo)menuInfo).targetView;
 		menu.setHeaderTitle(((Album)mList.getItemAtPosition(view.getPosition())).name);
 		menu.add(0, ITEM_CONTEXT_QUEUE, 1, "Queue Album");
 		menu.add(0, ITEM_CONTEXT_PLAY, 2, "Play Album");
@@ -268,7 +273,7 @@ public class AlbumListController extends ListController implements IController {
 	}
 	
 	public void onContextItemSelected(MenuItem item) {
-		final Album album = (Album)mList.getAdapter().getItem(((ThreeLabelsItemView)((AdapterContextMenuInfo)item.getMenuInfo()).targetView).getPosition());
+		final Album album = (Album)mList.getAdapter().getItem(((AlbumGridItem)((AdapterContextMenuInfo)item.getMenuInfo()).targetView).getPosition());
 		switch (item.getItemId()) {
 			case ITEM_CONTEXT_QUEUE:
 				mMusicManager.addToPlaylist(new QueryResponse(
@@ -447,26 +452,25 @@ public class AlbumListController extends ListController implements IController {
 			super(activity, 0, items);
 		}
 		public View getView(int position, View convertView, ViewGroup parent) {
-			final ThreeLabelsItemView view;
+			final AlbumGridItem view;
 			if (convertView == null) {
-				view = new ThreeLabelsItemView(mActivity, mMusicManager, parent.getWidth(), mFallbackBitmap, mList.getSelector(), false);
+				view = new AlbumGridItem(mActivity);
 			} else {
-				view = (ThreeLabelsItemView)convertView;
+				view = (AlbumGridItem)convertView;
 			}
 			
 			final Album album = getItem(position);
-			view.reset();
-			view.setPosition(position);
 			view.setTitle(album.name);
-			view.subtitle = album.artist;
-			view.subsubtitle = album.year > 0 ? String.valueOf(album.year) : "";
-			Log.i(TAG, "isListIdle: " + mPostScrollLoader.isListIdle());
+			view.setPosition(position);
+			//view.subtitle = album.artist;
+			//view.subsubtitle = album.year > 0 ? String.valueOf(album.year) : "";
+			//Log.i(TAG, "isListIdle: " + mPostScrollLoader.isListIdle());
 			if (mLoadCovers) {
 				if(mMusicManager.coverLoaded(album, mThumbSize)){
 					view.setCover(mMusicManager.getCoverSync(album, mThumbSize));
 				}else{
-					view.setCover(null);
-					view.getResponse().load(album, !mPostScrollLoader.isListIdle());
+					//view.setCover();
+					//view.getResponse().load(album, !mPostScrollLoader.isListIdle());
 				}
 			}
 			return view;
@@ -529,6 +533,7 @@ public class AlbumListController extends ListController implements IController {
 		super.onActivityResume(activity);
 		mMusicManager = ManagerFactory.getMusicManager(this);
 		mControlManager = ManagerFactory.getControlManager(this);
+		fetch();
 	}
 	
 	private static final long serialVersionUID = 1088971882661811256L;

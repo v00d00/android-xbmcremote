@@ -28,68 +28,97 @@ import org.xbmc.android.remote.presentation.controller.ArtistListController;
 import org.xbmc.android.remote.presentation.controller.FileListController;
 import org.xbmc.android.remote.presentation.controller.MusicGenreListController;
 import org.xbmc.android.remote.presentation.controller.RemoteController;
-import org.xbmc.android.widget.slidingtabs.SlidingTabActivity;
+import org.xbmc.android.remote.presentation.fragment.MusicAlbumFragment;
+import org.xbmc.android.remote.presentation.fragment.MusicArtistFragment;
+import org.xbmc.android.remote.presentation.fragment.MusicCompilationFragment;
+import org.xbmc.android.remote.presentation.fragment.MusicFilesFragment;
+import org.xbmc.android.remote.presentation.fragment.MusicGenreFragment;
 import org.xbmc.android.widget.slidingtabs.SlidingTabHost;
-import org.xbmc.android.widget.slidingtabs.SlidingTabHost.OnTabChangeListener;
 import org.xbmc.api.business.IEventClientManager;
 import org.xbmc.eventclient.ButtonCodes;
 
+import android.app.ActionBar;
+import android.app.ActionBar.Tab;
+import android.app.Activity;
+import android.app.Fragment;
+import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
-import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewTreeObserver;
-import android.widget.FrameLayout;
-import android.widget.ListView;
 
-public class MusicLibraryActivity extends SlidingTabActivity implements ViewTreeObserver.OnGlobalLayoutListener {
-
-	private SlidingTabHost mTabHost;
-	private AlbumListController mAlbumController;
-	private ArtistListController mArtistController;
-	private MusicGenreListController mGenreController;
-	private AlbumListController mCompilationsController;
-	private FileListController mFileController;
+public class MusicLibraryActivity extends Activity {
+	
+	protected ActionBar actionBar;
 	
 	private static final int MENU_NOW_PLAYING = 301;
-	private static final int MENU_UPDATE_LIBRARY = 302;
+
 	private static final int MENU_REMOTE = 303;
 	
-	private static final String PREF_REMEMBER_TAB = "setting_remember_last_tab";
-	private static final String LAST_MUSIC_TAB_ID = "last_music_tab_id";
-	
-    private ConfigurationManager mConfigurationManager;
-    private Handler mHandler;
+    private static class TabListener implements ActionBar.TabListener {
+    	boolean isAdded = false;
+        private Fragment mFragment;
+        private final String mTag;
+
+        public TabListener(String tag, Fragment fragment) {
+            mFragment = fragment;
+            mTag = tag;
+        }
+
+        public void onTabSelected(Tab tab, FragmentTransaction ft) {
+        	Log.v(mTag, "onTabSelected " +  isAdded);
+            if (!isAdded) {
+                ft.add(android.R.id.content, mFragment, mTag);
+                isAdded = true;
+            } else {
+                ft.attach(mFragment);
+            }
+        }
+
+        public void onTabUnselected(Tab tab, FragmentTransaction ft) {
+        	Log.v(mTag, "onTabUnselected");
+            if (mFragment != null) {
+                // Detach the fragment, because another one is being attached
+                ft.detach(mFragment);
+            }
+        }
+
+        public void onTabReselected(Tab tab, FragmentTransaction ft) {
+        	Log.v(mTag, "onTabReselected");
+            // User selected the already selected tab. Usually do nothing.
+        }
+    }
     
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.musiclibrary);
-		
-		// remove nasty top fading edge
-		FrameLayout topFrame = (FrameLayout)findViewById(android.R.id.content);
-		topFrame.setForeground(null);
-		
-		mTabHost = getTabHost();
-		
-		// add the tabs
-		mTabHost.addTab(mTabHost.newTabSpec("tab_albums", "Albums", R.drawable.st_album_on, R.drawable.st_album_off).setBigIcon(R.drawable.st_album_over).setContent(R.id.albumlist_outer_layout));
-		mTabHost.addTab(mTabHost.newTabSpec("tab_artists", "Artists", R.drawable.st_artist_on, R.drawable.st_artist_off).setBigIcon(R.drawable.st_artist_over).setContent(R.id.artists_outer_layout));
-		mTabHost.addTab(mTabHost.newTabSpec("tab_genres", "Genres", R.drawable.st_genre_on, R.drawable.st_genre_off).setBigIcon(R.drawable.st_genre_over).setContent(R.id.genres_outer_layout));
-		mTabHost.addTab(mTabHost.newTabSpec("tab_compilations", "Compilations", R.drawable.st_va_on, R.drawable.st_va_off).setBigIcon(R.drawable.st_va_over).setContent(R.id.compilations_outer_layout));
-		mTabHost.addTab(mTabHost.newTabSpec("tab_files", "File Mode", R.drawable.st_filemode_on, R.drawable.st_filemode_off).setBigIcon(R.drawable.st_filemode_over).setContent(R.id.filelist_outer_layout));
-		
-		mTabHost.getViewTreeObserver().addOnGlobalLayoutListener(this);
 
-		// assign the gui logic to each tab
+		MusicAlbumFragment albumFragment = new MusicAlbumFragment();
+		MusicArtistFragment artistFragment = new MusicArtistFragment();
+		MusicGenreFragment genreFragment = new MusicGenreFragment();
+		MusicCompilationFragment compilationFragment = new MusicCompilationFragment();
+		MusicFilesFragment filesFragment = new MusicFilesFragment();
+
+		actionBar = getActionBar();
+		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
+		actionBar.setDisplayShowHomeEnabled(true);
+		actionBar.setDisplayShowTitleEnabled(false);
+		
+		actionBar.addTab(actionBar.newTab().setText("Albums").setTabListener(new TabListener("Albums", albumFragment)));
+		actionBar.addTab(actionBar.newTab().setText("Artists").setTabListener(new TabListener("Artists", artistFragment)));
+		actionBar.addTab(actionBar.newTab().setText("Genres").setTabListener(new TabListener("Genres", genreFragment)));
+		actionBar.addTab(actionBar.newTab().setText("Compilations").setTabListener(new TabListener("Compilations", compilationFragment)));
+		actionBar.addTab(actionBar.newTab().setText("Files").setTabListener(new TabListener("Files", filesFragment)));
+	
+
+		/*// assign the gui logic to each tab
 		mHandler = new Handler();
 		mAlbumController = new AlbumListController();
 		mAlbumController.findMessageView(findViewById(R.id.albumlist_outer_layout));
@@ -106,36 +135,11 @@ public class MusicLibraryActivity extends SlidingTabActivity implements ViewTree
 
 		mCompilationsController = new AlbumListController();
 		mCompilationsController.findMessageView(findViewById(R.id.compilations_outer_layout));
-		mCompilationsController.setCompilationsOnly(true);
+		mCompilationsController.setCompilationsOnly(true);*/
 		
-		mTabHost.setOnTabChangedListener(new OnTabChangeListener() {
-			public void onTabChanged(String tabId) {
-				initTab(tabId);
-				
-				final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-				if (prefs.getBoolean(PREF_REMEMBER_TAB, false)) {
-					getSharedPreferences("global", Context.MODE_PRIVATE).edit().putString(LAST_MUSIC_TAB_ID, tabId).commit();
-				}
-			}
-		});
-		
-		mConfigurationManager = ConfigurationManager.getInstance(this);
 	}
 	
-	public void onGlobalLayout() {
-        mTabHost.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-		
-		String lastTab = "tab_albums";
-		final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
-		if (prefs.getBoolean(PREF_REMEMBER_TAB, false)) {
-			lastTab = (getSharedPreferences("global", Context.MODE_PRIVATE).getString(LAST_MUSIC_TAB_ID, "tab_albums"));
-			mTabHost.selectTabByTag(lastTab);
-		}
-		
-		initTab(lastTab);
-	}
-	
-	private void initTab(String tabId) {
+	/*private void initTab(String tabId) {
 		if (tabId.equals("tab_albums")) {
 			mAlbumController.onCreate(MusicLibraryActivity.this, mHandler, (ListView)findViewById(R.id.albumlist_list));
 		}
@@ -153,54 +157,17 @@ public class MusicLibraryActivity extends SlidingTabActivity implements ViewTree
 		}
 	}
 	
+	*/
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
 		menu.clear();
 		menu.add(0, MENU_NOW_PLAYING, 0, "Now playing").setIcon(R.drawable.menu_nowplaying);
-		switch (mTabHost.getCurrentTab()) {
-			case 0:
-				mAlbumController.onCreateOptionsMenu(menu);
-				break;
-			case 1:
-				mArtistController.onCreateOptionsMenu(menu);
-				break;
-			case 2:
-				mGenreController.onCreateOptionsMenu(menu);
-				break;
-			case 3:
-				mCompilationsController.onCreateOptionsMenu(menu);
-				break;
-			case 4:
-				mFileController.onCreateOptionsMenu(menu);
-				break;
-		}
-		menu.add(0, MENU_UPDATE_LIBRARY, 0, "Update Library").setIcon(R.drawable.menu_refresh);
 		menu.add(0, MENU_REMOTE, 0, "Remote control").setIcon(R.drawable.menu_remote);
 		return super.onPrepareOptionsMenu(menu);
 	}
 	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		
-		// first, process individual menu events
-		switch (mTabHost.getCurrentTab()) {
-		case 0:
-			mAlbumController.onOptionsItemSelected(item);
-			break;
-		case 1:
-			mArtistController.onOptionsItemSelected(item);
-			break;
-		case 2:
-			mGenreController.onOptionsItemSelected(item);
-			break;
-		case 3:
-			mCompilationsController.onOptionsItemSelected(item);
-			break;
-		case 4:
-			mFileController.onOptionsItemSelected(item);
-			break;
-		}
-		
 		// then the generic ones.
 		switch (item.getItemId()) {
 		case MENU_REMOTE:
@@ -213,9 +180,6 @@ public class MusicLibraryActivity extends SlidingTabActivity implements ViewTree
 			intent.addFlags(intent.getFlags() | Intent.FLAG_ACTIVITY_NO_HISTORY);
 			startActivity(intent);
 			return true;
-		case MENU_UPDATE_LIBRARY:
-			mAlbumController.updateLibrary();
-			return true;
 		case MENU_NOW_PLAYING:
 			startActivity(new Intent(this,  NowPlayingActivity.class));
 			return true;
@@ -223,51 +187,7 @@ public class MusicLibraryActivity extends SlidingTabActivity implements ViewTree
 		return super.onOptionsItemSelected(item);
 	}
 	
-	@Override
-	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
-		super.onCreateContextMenu(menu, v, menuInfo);
-		switch (mTabHost.getCurrentTab()) {
-			case 0:
-				mAlbumController.onCreateContextMenu(menu, v, menuInfo);
-				break;
-			case 1:
-				mArtistController.onCreateContextMenu(menu, v, menuInfo);
-				break;
-			case 2:
-				mGenreController.onCreateContextMenu(menu, v, menuInfo);
-				break;
-			case 3:
-				mCompilationsController.onCreateContextMenu(menu, v, menuInfo);
-				break;
-			case 4:
-				mFileController.onCreateContextMenu(menu, v, menuInfo);
-				break;
-		}
-	}
-	
-	@Override
-	public boolean onContextItemSelected(MenuItem item) {
-		switch (mTabHost.getCurrentTab()) {
-		case 0:
-			mAlbumController.onContextItemSelected(item);
-			break;
-		case 1:
-			mArtistController.onContextItemSelected(item);
-			break;
-		case 2:
-			mGenreController.onContextItemSelected(item);
-			break;
-		case 3:
-			mCompilationsController.onContextItemSelected(item);
-			break;
-		case 4:
-			mFileController.onContextItemSelected(item);
-			break;
-		}
-		return super.onContextItemSelected(item);
-	}
-	
-	@Override
+	/*@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 		IEventClientManager client = ManagerFactory.getEventClientManager(mAlbumController);
 		switch (keyCode) {
@@ -280,28 +200,5 @@ public class MusicLibraryActivity extends SlidingTabActivity implements ViewTree
 		}
 		client.setController(null);
 		return super.onKeyDown(keyCode, event);
-	}
-	
-
-	@Override
-	protected void onResume() {
-		super.onResume();
-		mAlbumController.onActivityResume(this);
-		mArtistController.onActivityResume(this);
-		mGenreController.onActivityResume(this);
-		mCompilationsController.onActivityResume(this);
-		mFileController.onActivityResume(this);
-		mConfigurationManager.onActivityResume(this);
-	}
-	
-	@Override
-	protected void onPause() {
-		super.onPause();
-		mAlbumController.onActivityPause();
-		mArtistController.onActivityPause();
-		mGenreController.onActivityPause();
-		mCompilationsController.onActivityPause();
-		mFileController.onActivityPause();
-		mConfigurationManager.onActivityPause();
-	}
+	}*/
 }

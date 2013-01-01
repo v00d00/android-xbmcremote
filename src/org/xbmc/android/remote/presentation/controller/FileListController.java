@@ -53,7 +53,6 @@ import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListAdapter;
-import android.widget.ListView;
 
 public class FileListController extends ListController implements IController {
 	
@@ -225,7 +224,7 @@ public class FileListController extends ListController implements IController {
 	public void setListAdapter(ListAdapter adapter) {
         synchronized (this) {
             mAdapter = adapter;
-            ((ListView)mList).setAdapter(adapter);
+            ((AbsListView)mList).setAdapter(adapter);
         }
     }
 
