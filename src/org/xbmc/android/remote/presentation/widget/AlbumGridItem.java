@@ -28,7 +28,7 @@ public class AlbumGridItem extends RelativeLayout {
 		
 		AbsListView.LayoutParams lp = new AbsListView.LayoutParams(
 				LayoutParams.MATCH_PARENT, 
-				(int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 96, getResources().getDisplayMetrics()));
+				(int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 128, getResources().getDisplayMetrics()));
 		setLayoutParams(lp);
 	}
 	

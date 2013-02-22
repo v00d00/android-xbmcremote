@@ -8,5 +8,5 @@
     android:numColumns="auto_fit"
 	android:isScrollContainer="true"
 	android:layout_width="fill_parent"
-	android:columnWidth="96dp"
+	android:columnWidth="128dp"
 	android:stretchMode="columnWidth"/>

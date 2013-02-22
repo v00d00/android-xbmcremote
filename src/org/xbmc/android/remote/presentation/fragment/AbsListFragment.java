@@ -3,9 +3,9 @@ package org.xbmc.android.remote.presentation.fragment;
 import org.xbmc.android.remote.R;
 import org.xbmc.android.remote.presentation.controller.ListController;
 
-import android.app.Fragment;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -13,6 +13,7 @@ import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
+import android.widget.FrameLayout;
 
 public class AbsListFragment extends Fragment {
 	protected ListController controller;
@@ -34,9 +35,9 @@ public class AbsListFragment extends Fragment {
 	public void onActivityCreated(Bundle savedInstanceState) {
 		if (handler == null)
 			handler = new Handler();
-
+		
 		if (controller != null) {
-			controller.onCreate(getActivity(), handler, (AbsListView) getView());		
+			controller.onCreate(getActivity(), handler, ((AbsListView) ((FrameLayout) getView()).getChildAt(0)));		
 		}
 		
 		super.onActivityCreated(savedInstanceState);

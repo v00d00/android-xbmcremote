@@ -21,102 +21,86 @@
 
 package org.xbmc.android.remote.presentation.activity;
 
+import java.util.ArrayList;
+
 import org.xbmc.android.remote.R;
-import org.xbmc.android.remote.business.ManagerFactory;
-import org.xbmc.android.remote.presentation.controller.AlbumListController;
-import org.xbmc.android.remote.presentation.controller.ArtistListController;
-import org.xbmc.android.remote.presentation.controller.FileListController;
-import org.xbmc.android.remote.presentation.controller.MusicGenreListController;
 import org.xbmc.android.remote.presentation.controller.RemoteController;
 import org.xbmc.android.remote.presentation.fragment.MusicAlbumFragment;
 import org.xbmc.android.remote.presentation.fragment.MusicArtistFragment;
 import org.xbmc.android.remote.presentation.fragment.MusicCompilationFragment;
 import org.xbmc.android.remote.presentation.fragment.MusicFilesFragment;
 import org.xbmc.android.remote.presentation.fragment.MusicGenreFragment;
-import org.xbmc.android.widget.slidingtabs.SlidingTabHost;
-import org.xbmc.api.business.IEventClientManager;
-import org.xbmc.eventclient.ButtonCodes;
 
 import android.app.ActionBar;
-import android.app.ActionBar.Tab;
-import android.app.Activity;
-import android.app.Fragment;
-import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.util.Log;
-import android.view.ContextMenu;
-import android.view.ContextMenu.ContextMenuInfo;
-import android.view.KeyEvent;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 
-public class MusicLibraryActivity extends Activity {
-	
+public class MusicLibraryActivity extends FragmentActivity {
+
 	protected ActionBar actionBar;
-	
+
 	private static final int MENU_NOW_PLAYING = 301;
 
 	private static final int MENU_REMOTE = 303;
-	
-    private static class TabListener implements ActionBar.TabListener {
-    	boolean isAdded = false;
-        private Fragment mFragment;
-        private final String mTag;
 
-        public TabListener(String tag, Fragment fragment) {
-            mFragment = fragment;
-            mTag = tag;
+	public static class MusicFragmentAdapter extends FragmentPagerAdapter {
+		ArrayList<Fragment> list = new ArrayList<Fragment>();
+
+        public MusicFragmentAdapter(FragmentManager fm) {
+            super(fm);
         }
 
-        public void onTabSelected(Tab tab, FragmentTransaction ft) {
-        	Log.v(mTag, "onTabSelected " +  isAdded);
-            if (!isAdded) {
-                ft.add(android.R.id.content, mFragment, mTag);
-                isAdded = true;
-            } else {
-                ft.attach(mFragment);
-            }
+        @Override
+        public int getCount() {
+            return list.size();
         }
 
-        public void onTabUnselected(Tab tab, FragmentTransaction ft) {
-        	Log.v(mTag, "onTabUnselected");
-            if (mFragment != null) {
-                // Detach the fragment, because another one is being attached
-                ft.detach(mFragment);
-            }
+        @Override
+        public Fragment getItem(int position) {
+            return list.get(position);
         }
 
-        public void onTabReselected(Tab tab, FragmentTransaction ft) {
-        	Log.v(mTag, "onTabReselected");
-            // User selected the already selected tab. Usually do nothing.
+        void addFragment(Fragment fragment) {
+        	list.add(fragment);
         }
     }
-    
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		super.setContentView(R.layout.musiclibrary);
 
-		MusicAlbumFragment albumFragment = new MusicAlbumFragment();
-		MusicArtistFragment artistFragment = new MusicArtistFragment();
-		MusicGenreFragment genreFragment = new MusicGenreFragment();
-		MusicCompilationFragment compilationFragment = new MusicCompilationFragment();
-		MusicFilesFragment filesFragment = new MusicFilesFragment();
+		MusicFragmentAdapter adapter = new MusicFragmentAdapter(getSupportFragmentManager());
 
-		actionBar = getActionBar();
+	    adapter.addFragment(new MusicAlbumFragment());
+		adapter.addFragment(new MusicArtistFragment());
+		adapter.addFragment(new MusicGenreFragment());
+		adapter.addFragment(new MusicCompilationFragment());
+		adapter.addFragment(new MusicFilesFragment());
+
+		ViewPager pager = (ViewPager) findViewById(R.id.musicpager);
+	    pager.setAdapter(adapter);
+	    pager.setCurrentItem(0);
+
+		/*actionBar = getActionBar();
 		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
 		actionBar.setDisplayShowHomeEnabled(true);
 		actionBar.setDisplayShowTitleEnabled(false);
-		
+
 		actionBar.addTab(actionBar.newTab().setText("Albums").setTabListener(new TabListener("Albums", albumFragment)));
 		actionBar.addTab(actionBar.newTab().setText("Artists").setTabListener(new TabListener("Artists", artistFragment)));
 		actionBar.addTab(actionBar.newTab().setText("Genres").setTabListener(new TabListener("Genres", genreFragment)));
 		actionBar.addTab(actionBar.newTab().setText("Compilations").setTabListener(new TabListener("Compilations", compilationFragment)));
-		actionBar.addTab(actionBar.newTab().setText("Files").setTabListener(new TabListener("Files", filesFragment)));
-	
+		actionBar.addTab(actionBar.newTab().setText("Files").setTabListener(new TabListener("Files", filesFragment)));*/
+
 
 		/*// assign the gui logic to each tab
 		mHandler = new Handler();
@@ -126,7 +110,7 @@ public class MusicLibraryActivity extends Activity {
 
 		mFileController = new FileListController();
 		mFileController.findMessageView(findViewById(R.id.filelist_outer_layout));
-		
+
 		mArtistController = new ArtistListController();
 		mArtistController.findMessageView(findViewById(R.id.artists_outer_layout));
 
@@ -136,9 +120,9 @@ public class MusicLibraryActivity extends Activity {
 		mCompilationsController = new AlbumListController();
 		mCompilationsController.findMessageView(findViewById(R.id.compilations_outer_layout));
 		mCompilationsController.setCompilationsOnly(true);*/
-		
+
 	}
-	
+
 	/*private void initTab(String tabId) {
 		if (tabId.equals("tab_albums")) {
 			mAlbumController.onCreate(MusicLibraryActivity.this, mHandler, (ListView)findViewById(R.id.albumlist_list));
@@ -156,7 +140,7 @@ public class MusicLibraryActivity extends Activity {
 			mCompilationsController.onCreate(MusicLibraryActivity.this, mHandler, (ListView)findViewById(R.id.compilations_list));
 		}
 	}
-	
+
 	*/
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
@@ -165,7 +149,7 @@ public class MusicLibraryActivity extends Activity {
 		menu.add(0, MENU_REMOTE, 0, "Remote control").setIcon(R.drawable.menu_remote);
 		return super.onPrepareOptionsMenu(menu);
 	}
-	
+
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		// then the generic ones.
@@ -186,7 +170,7 @@ public class MusicLibraryActivity extends Activity {
 		}
 		return super.onOptionsItemSelected(item);
 	}
-	
+
 	/*@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 		IEventClientManager client = ManagerFactory.getEventClientManager(mAlbumController);

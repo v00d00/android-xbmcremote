@@ -19,7 +19,7 @@
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:layout_above="@id/slidingtabs">
-			<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+			<LinearLayout
 				android:layout_width="fill_parent" android:layout_height="fill_parent"
 				android:id="@+id/albumlist_outer_layout" android:orientation="vertical"
 				android:fadingEdge="none">
@@ -35,7 +35,7 @@
 				</org.xbmc.android.widget.FastScrollView>
 			</LinearLayout>
 
-			<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+			<LinearLayout
 				android:layout_width="fill_parent" android:layout_height="fill_parent"
 				android:id="@+id/songlist_outer_layout" android:orientation="vertical"
 				android:fadingEdge="none">
