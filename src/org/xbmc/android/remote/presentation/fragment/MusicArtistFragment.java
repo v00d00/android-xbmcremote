@@ -9,7 +9,6 @@ import android.view.View;
 import android.view.ViewGroup;
 
 public class MusicArtistFragment extends AbsListFragment {
-	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		setController(new ArtistListController());

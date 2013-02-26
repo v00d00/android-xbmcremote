@@ -31,6 +31,7 @@ import org.xbmc.android.remote.presentation.activity.DialogFactory;
 import org.xbmc.android.remote.presentation.activity.ListActivity;
 import org.xbmc.android.remote.presentation.widget.AlbumGridItem;
 import org.xbmc.android.util.ImportUtilities;
+import org.xbmc.api.business.CoverResponse;
 import org.xbmc.api.business.DataResponse;
 import org.xbmc.api.business.IControlManager;
 import org.xbmc.api.business.IInfoManager;
@@ -469,8 +470,9 @@ public class AlbumListController extends ListController implements IController {
 				if(mMusicManager.coverLoaded(album, mThumbSize)){
 					view.setCover(mMusicManager.getCoverSync(album, mThumbSize));
 				}else{
-					//view.setCover();
-					//view.getResponse().load(album, !mPostScrollLoader.isListIdle());
+					view.setCover(mFallbackBitmap);
+					CoverResponse coverResponse = new CoverResponse(mActivity, mMusicManager, mFallbackBitmap, mThumbSize, mHandler);
+					coverResponse.load(album, mThumbSize, false);
 				}
 			}
 			return view;

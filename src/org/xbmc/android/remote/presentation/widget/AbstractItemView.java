@@ -11,10 +11,10 @@ import android.os.Handler;
 import android.widget.RelativeLayout;
 
 public abstract class AbstractItemView extends RelativeLayout {
-	
+
 	public static final int MSG_UPDATE_COVER = -1;
 	protected final CoverResponse coverResponse;
-	
+
 	private final Handler handler = new Handler() {
 		public void handleMessage(android.os.Message msg) {
 			switch (msg.what) {
@@ -24,19 +24,19 @@ public abstract class AbstractItemView extends RelativeLayout {
 			}
 		};
 	};
-	
+
 	protected int position;
 	protected String title;
-	
+
 	public AbstractItemView(Context context, IManager manager, int width, Bitmap defaultCover, Drawable selection, int thumbSize, boolean fixedSize) {
 		super(context);
-		
+
 		if (manager != null)
-			coverResponse = new CoverResponse(context, manager, defaultCover, ThumbSize.SMALL, handler);
+			coverResponse = new CoverResponse(context, manager, defaultCover, thumbSize, handler);
 		else
 			coverResponse = null;
 	}
-	
+
 	public AbstractItemView(Context context, int width, Bitmap defaultCover, Drawable selection, boolean fixedSize) {
 		this(context, null, width, defaultCover, selection, 0, fixedSize);
 	}
@@ -47,23 +47,23 @@ public abstract class AbstractItemView extends RelativeLayout {
 	public CoverResponse getResponse() {
 		return coverResponse;
 	}
-	
+
 	public boolean hasBitmap() {
 		return true;
 	}
-	
+
 	public void setPosition(int position) {
 		this.position = position;
 	}
-	
+
 	public int getPosition() {
 		return position;
 	}
-	
+
 	public void setTitle(String title) {
 		this.title = title;
 	}
-	
+
 	public String getTitle() {
 		return title;
 	}

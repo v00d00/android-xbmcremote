@@ -24,12 +24,16 @@ package org.xbmc.android.remote.presentation.activity;
 import java.util.ArrayList;
 
 import org.xbmc.android.remote.R;
+import org.xbmc.android.remote.business.Command;
+import org.xbmc.android.remote.business.ManagerFactory;
 import org.xbmc.android.remote.presentation.controller.RemoteController;
 import org.xbmc.android.remote.presentation.fragment.MusicAlbumFragment;
 import org.xbmc.android.remote.presentation.fragment.MusicArtistFragment;
 import org.xbmc.android.remote.presentation.fragment.MusicCompilationFragment;
 import org.xbmc.android.remote.presentation.fragment.MusicFilesFragment;
 import org.xbmc.android.remote.presentation.fragment.MusicGenreFragment;
+import org.xbmc.api.business.INotifiableManager;
+import org.xbmc.api.presentation.INotifiableController;
 
 import android.app.ActionBar;
 import android.content.Context;
@@ -40,15 +44,15 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
-public class MusicLibraryActivity extends FragmentActivity {
+public class MusicLibraryActivity extends FragmentActivity implements INotifiableController {
 
 	protected ActionBar actionBar;
 
 	private static final int MENU_NOW_PLAYING = 301;
-
 	private static final int MENU_REMOTE = 303;
 
 	public static class MusicFragmentAdapter extends FragmentPagerAdapter {
@@ -65,6 +69,7 @@ public class MusicLibraryActivity extends FragmentActivity {
 
         @Override
         public Fragment getItem(int position) {
+        	Log.d("Position: ", String.valueOf(position));
             return list.get(position);
         }
 
@@ -169,6 +174,30 @@ public class MusicLibraryActivity extends FragmentActivity {
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
+	}
+
+	@Override
+	public void onWrongConnectionState(int state, INotifiableManager manager,
+			Command<?> source) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onError(Exception e) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onMessage(String message) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void runOnUI(Runnable action) {
+		super.runOnUiThread(action);
 	}
 
 	/*@Override

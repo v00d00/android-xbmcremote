@@ -1,6 +1,7 @@
 package org.xbmc.android.remote.presentation.widget;
 
 import org.xbmc.android.remote.R;
+import org.xbmc.api.business.CoverResponse;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -19,7 +20,6 @@ public class AlbumGridItem extends RelativeLayout {
 
 	public AlbumGridItem(Context context) {
 		super(context);
-		
 		LayoutInflater inflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		inflater.inflate(R.layout.album_grid_item, this, true);
 		

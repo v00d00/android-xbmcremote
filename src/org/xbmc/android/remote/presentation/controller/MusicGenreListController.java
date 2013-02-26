@@ -46,7 +46,6 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
-import android.widget.ListView;
 
 public class MusicGenreListController extends ListController implements IController {
 	
@@ -78,6 +77,7 @@ public class MusicGenreListController extends ListController implements IControl
 			mFallbackBitmap = BitmapFactory.decodeResource(activity.getResources(), R.drawable.icon_genre);
 			
 			final String title = "Genres";
+			setTitle(title + "(Loading....)");
 			DataResponse<ArrayList<Genre>> response = new DataResponse<ArrayList<Genre>>() {
 				@SuppressLint("")
 				public void run() {

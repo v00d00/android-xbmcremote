@@ -28,8 +28,8 @@ import org.xbmc.android.remote.business.ManagerFactory;
 import org.xbmc.android.remote.presentation.activity.DialogFactory;
 import org.xbmc.android.remote.presentation.activity.MusicArtistActivity;
 import org.xbmc.android.remote.presentation.widget.AlbumGridItem;
-import org.xbmc.android.remote.presentation.widget.OneLabelItemView;
 import org.xbmc.android.util.ImportUtilities;
+import org.xbmc.api.business.CoverResponse;
 import org.xbmc.api.business.DataResponse;
 import org.xbmc.api.business.IMusicManager;
 import org.xbmc.api.object.Artist;
@@ -52,8 +52,6 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
-import android.widget.GridView;
-import android.widget.ListView;
 import android.widget.Toast;
 
 public class ArtistListController extends ListController implements IController {
@@ -192,26 +190,27 @@ public class ArtistListController extends ListController implements IController 
 			super(activity, 0, items);
 		}
 		public View getView(int position, View convertView, ViewGroup parent) {
-			final AlbumGridItem view;
+			final AlbumGridItem item;
 			if (convertView == null) {
-				view = new AlbumGridItem(mActivity);
+				item = new AlbumGridItem(mActivity);
 			} else {
-				view = (AlbumGridItem)convertView;
+				item = (AlbumGridItem)convertView;
 			}
 			final Artist artist = this.getItem(position);
-			view.setPosition(position);
-			view.setTitle(artist.name);
+			item.setPosition(position);
+			item.setTitle(artist.name);
 			
 			if (mLoadCovers) {
 				if(mMusicManager.coverLoaded(artist, mThumbSize)){
-					view.setCover(mMusicManager.getCoverSync(artist, mThumbSize));
-				}else{
-					view.setCover(null);
-					//view.getResponse().load(artist, !mPostScrollLoader.isListIdle());
+					item.setCover(mMusicManager.getCoverSync(artist, mThumbSize));
+				} else {
+					item.setCover(mFallbackBitmap);
+					CoverResponse coverResponse = new CoverResponse(mActivity, mMusicManager, mFallbackBitmap, mThumbSize, mHandler);
+					coverResponse.load(artist, mThumbSize, false);
 				}
 			}
 
-			return view;
+			return item;
 		}
 	}
 	private static final long serialVersionUID = 4360738733222799619L;
