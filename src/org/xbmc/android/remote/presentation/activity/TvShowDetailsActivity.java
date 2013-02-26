@@ -30,7 +30,6 @@ import org.xbmc.android.remote.presentation.controller.TvShowListController;
 import org.xbmc.android.util.KeyTracker;
 import org.xbmc.android.util.KeyTracker.Stage;
 import org.xbmc.android.util.OnLongPressBackKeyTracker;
-import org.xbmc.android.util.StringUtil;
 import org.xbmc.api.business.DataResponse;
 import org.xbmc.api.business.IControlManager;
 import org.xbmc.api.business.IEventClientManager;
@@ -51,13 +50,13 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.ContextMenu;
-import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Display;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.MenuItem.OnMenuItemClickListener;
 import android.view.View;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnClickListener;
 import android.view.View.OnCreateContextMenuListener;
 import android.widget.Button;
@@ -125,7 +124,7 @@ public class TvShowDetailsActivity extends Activity {
 			((ImageView)findViewById(R.id.tvdetails_rating_stars)).setImageResource(sStarImages[(int)Math.round(show.rating % 10)]);
 		}
 		((TextView)findViewById(R.id.tvdetails_first_aired)).setText(show.firstAired);
-		((TextView)findViewById(R.id.tvdetails_genre)).setText(StringUtil.join(",", show.genre));
+		((TextView)findViewById(R.id.tvdetails_genre)).setText(show.genre);
 		((TextView)findViewById(R.id.tvdetails_rating)).setText(String.valueOf(show.rating));
 		
 		mTvShowDetailsController.setupPlayButton((Button)findViewById(R.id.tvdetails_playbutton));
@@ -176,7 +175,7 @@ public class TvShowDetailsActivity extends Activity {
 				public void run() {
 					final TvShow show = value;
 					episodesVew.setText(show.numEpisodes + " (" + show.watchedEpisodes + " Watched - " + (show.numEpisodes - show.watchedEpisodes) + " Unwatched)");
-					studioView.setText(StringUtil.join(",", show.network));
+					studioView.setText(show.network);
 					parentalView.setText(show.contentRating.equals("") ? NO_DATA : show.contentRating);
 					plotView.setText(show.summary.equals("") ? NO_DATA : show.summary);
 					
@@ -246,8 +245,8 @@ public class TvShowDetailsActivity extends Activity {
 		}
 
 		public void onActivityResume(Activity activity) {
-			mShowManager = ManagerFactory.getTvManager(this);
-			mControlManager = ManagerFactory.getControlManager(this);
+			mShowManager.setController(this);
+			mControlManager.setController(this);
 		}
 	}
 

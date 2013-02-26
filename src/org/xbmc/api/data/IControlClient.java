@@ -24,7 +24,6 @@ package org.xbmc.api.data;
 import java.io.Serializable;
 
 import org.xbmc.api.business.INotifiableManager;
-import org.xbmc.api.info.PlayStatus;
 import org.xbmc.api.type.SeekType;
 
 
@@ -36,51 +35,13 @@ import org.xbmc.api.type.SeekType;
  */
 public interface IControlClient extends IClient {
 	
-	public static final IControlClient.ICurrentlyPlaying NOTHING_PLAYING = new IControlClient.ICurrentlyPlaying() {
-		private static final long serialVersionUID = -1554068775915058884L;
-		public boolean isPlaying() { return false; }
-		public int getMediaType() { return 0; }
-		public int getPlaylistPosition() { return -1; }
-		public String getTitle() { return ""; }
-		public int getTime() { return 0; }
-		public int getPlayStatus() { return PlayStatus.STOPPED; }
-		public float getPercentage() { return 0; }
-		public String getFilename() { return ""; }
-		public int getDuration() { return 0; }
-		public String getArtist() { return ""; }
-		public String getAlbum() { return ""; }
-		public int getHeight() { return 0; }
-		public int getWidth() { return 0; }
-		public String getThumbnail() { return ""; }
-		public String getFanart() { return ""; }
-	};
-	
-	public static final IControlClient.ICurrentlyPlaying PLAYING_UNKNOWN = new IControlClient.ICurrentlyPlaying() {
-		public boolean isPlaying() { return true; }
-		public int getMediaType() { return 0; }
-		public int getPlaylistPosition() { return -1; }
-		public String getTitle() { return ""; }
-		public int getTime() { return 0; }
-		public int getPlayStatus() { return PlayStatus.PLAYING; }
-		public float getPercentage() { return 0; }
-		public String getFilename() { return ""; }
-		public int getDuration() { return 0; }
-		public String getArtist() { return ""; }
-		public String getAlbum() { return ""; }
-		public int getHeight() { return 0; }
-		public int getWidth() { return 0; }
-		public String getThumbnail() { return ""; }
-		public String getFanart() { return ""; }
-	};	
-	
-	
 	/**
 	 * Adds a file or folder (<code>fileOrFolder</code> is either a file or a folder) to the current playlist.
 	 * @param manager Manager reference
 	 * @param fileOrFolder
 	 * @return true on success, false otherwise.
 	 */
-	public boolean addToPlaylist(INotifiableManager manager, String fileOrFolder);
+	public boolean addToPlaylist(INotifiableManager manager, String fileOrFolder, int playlistType);
 	
 	/**
 	 * Starts playing the media file <code>filename</code> .
@@ -88,7 +49,7 @@ public interface IControlClient extends IClient {
 	 * @param filename File to play
 	 * @return true on success, false otherwise.
 	 */
-	public boolean playFile(INotifiableManager manager, String filename);
+	public boolean playFile(INotifiableManager manager, String filename, int playlistType);
 	
 	/**
 	 * Starts playing/showing the next media/image in the current playlist or,
@@ -286,7 +247,7 @@ public interface IControlClient extends IClient {
 	 * @param playlistId Playlist ID ("0" = music, "1" = video)
 	 * @return True on success, false otherwise.
 	 */
-	public boolean setCurrentPlaylist(INotifiableManager manager, String playlistId);
+	public boolean setCurrentPlaylist(INotifiableManager manager, int playlistId);
 	
 	/**
 	 * Sets the current playlist identifier
@@ -302,7 +263,7 @@ public interface IControlClient extends IClient {
 	 * @param position New playlist position
 	 * @return True on success, false otherwise.
 	 */
-	public boolean setPlaylistPos(INotifiableManager manager, int position);
+	public boolean setPlaylistPos(INotifiableManager manager, int playlistId, int position);
 	
 	/**
 	 * Clears a playlist.
@@ -310,7 +271,7 @@ public interface IControlClient extends IClient {
 	 * @param playlistId Playlist ID to clear (0 = music, 1 = video)
 	 * @return True on success, false otherwise.
 	 */
-	public boolean clearPlaylist(INotifiableManager manager, String playlistId);
+	public boolean clearPlaylist(INotifiableManager manager, int playlistId);
 	
 	/**
 	 * Returns state and type of the media currently playing.
@@ -351,9 +312,5 @@ public interface IControlClient extends IClient {
 		
 		public int getWidth();
 		public int getHeight();
-		
-		public String getThumbnail();
-		
-		public String getFanart();
 	}
 }

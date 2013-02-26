@@ -67,7 +67,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
-import android.widget.ListView;
+import android.widget.ListAdapter;
 import android.widget.Toast;
 
 public class MovieListController extends ListController implements IController {
@@ -130,7 +130,7 @@ public class MovieListController extends ListController implements IController {
 			mList.setOnItemClickListener(new OnItemClickListener() {
 				public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 					if(isLoading()) return;
-					final Movie movie = (Movie)mList.getAdapter().getItem(((FiveLabelsItemView)view).getPosition());
+					final Movie movie = (Movie)mList.getAdapter().getItem(((FiveLabelsItemView)view).position);
 					Intent nextActivity = new Intent(view.getContext(), MovieDetailsActivity.class);
 					nextActivity.putExtra(ListController.EXTRA_MOVIE, movie);
 					mActivity.startActivity(nextActivity);
@@ -144,11 +144,10 @@ public class MovieListController extends ListController implements IController {
 	private void fetch() {
 		final String title = mActor != null ? mActor.name + " - " : mGenre != null ? mGenre.name + " - " : "" + "Movies";
 		DataResponse<ArrayList<Movie>> response = new DataResponse<ArrayList<Movie>>() {
-			@SuppressLint("")
 			public void run() {
 				if (value.size() > 0) {
 					setTitle(title + " (" + value.size() + ")");
-					((ListView)mList).setAdapter(new MovieAdapter(mActivity, value));
+					((AdapterView<ListAdapter>) mList).setAdapter(new MovieAdapter(mActivity, value));
 				} else {
 					setTitle(title);
 					setNoDataMessage("No movies found.", R.drawable.icon_movie_dark);
@@ -202,14 +201,14 @@ public class MovieListController extends ListController implements IController {
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
 		final FiveLabelsItemView view = (FiveLabelsItemView)((AdapterContextMenuInfo)menuInfo).targetView;
-		menu.setHeaderTitle(view.getTitle());
+		menu.setHeaderTitle(view.title);
 		menu.add(0, ITEM_CONTEXT_PLAY, 1, "Play Movie");
 		menu.add(0, ITEM_CONTEXT_INFO, 2, "View Details");
 		menu.add(0, ITEM_CONTEXT_IMDB, 3, "Open IMDb");
 	}
 	
 	public void onContextItemSelected(MenuItem item) {
-		final Movie movie = (Movie)mList.getAdapter().getItem(((FiveLabelsItemView)((AdapterContextMenuInfo)item.getMenuInfo()).targetView).getPosition());
+		final Movie movie = (Movie)mList.getAdapter().getItem(((FiveLabelsItemView)((AdapterContextMenuInfo)item.getMenuInfo()).targetView).position);
 		switch (item.getItemId()) {
 			case ITEM_CONTEXT_PLAY:
 				mControlManager.playFile(new DataResponse<Boolean>() {
@@ -218,7 +217,7 @@ public class MovieListController extends ListController implements IController {
 							mActivity.startActivity(new Intent(mActivity, NowPlayingActivity.class));
 						}
 					}
-				}, movie.getPath(), mActivity.getApplicationContext());
+				}, movie.getPath(), 1, mActivity.getApplicationContext());
 				break;
 			case ITEM_CONTEXT_INFO:
 				Intent nextActivity = new Intent(mActivity, MovieDetailsActivity.class);
@@ -359,14 +358,13 @@ public class MovieListController extends ListController implements IController {
 			
 			final Movie movie = getItem(position);
 			view.reset();
-			view.setPosition(position);
+			view.position = position;
 			view.posterOverlay = movie.numWatched > 0 ? mWatchedBitmap : null;
-			view.setTitle(movie.title);
-			view.subtitle = StringUtil.join(" / ", movie.genres);
+			view.title = movie.title;
+			view.subtitle = movie.genres;
 			view.subtitleRight = movie.year > 0 ? String.valueOf(movie.year) : "";
 			view.bottomtitle = movie.runtime;
-			final DecimalFormat df = new DecimalFormat("#.0");
-			view.bottomright = String.valueOf(df.format(movie.rating));
+			view.bottomright = String.valueOf(movie.rating);
 			
 			if (mLoadCovers) {
 				if(mVideoManager.coverLoaded(movie, mThumbSize)){
@@ -395,8 +393,12 @@ public class MovieListController extends ListController implements IController {
 
 	public void onActivityResume(Activity activity) {
 		super.onActivityResume(activity);
-		mVideoManager = ManagerFactory.getVideoManager(this);
-		mControlManager = ManagerFactory.getControlManager(this);
+		if (mVideoManager != null) {
+			mVideoManager.setController(this);
+		}
+		if (mControlManager != null) {
+			mControlManager.setController(this);
+		}
 	}
 
 }

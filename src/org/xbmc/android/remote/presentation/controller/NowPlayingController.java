@@ -103,12 +103,6 @@ public class NowPlayingController extends AbstractController implements INotifia
 				mNowPlayingActivity.updateCover(ConnectionFactory.getNowPlayingPoller(mActivity).getNowPlayingCover(), (currentlyPlaying != null) ? currentlyPlaying.getMediaType() : MediaType.UNKNOWN);
 				return true;
 				
-			case NowPlayingPollerThread.MESSAGE_FANART_CHANGED:
-				// TODO: FIX!!
-				mNowPlayingActivity.updateFanart(ConnectionFactory.getNowPlayingPoller(mActivity).getNowPlayingFanart(), (currentlyPlaying != null) ? currentlyPlaying.getMediaType() : MediaType.UNKNOWN);
-				return true;
-				
-				
 			case NowPlayingPollerThread.MESSAGE_CONNECTION_ERROR:
 				mPlayStatus = PlayStatus.UNKNOWN;
 				Log.w(TAG,"Received connection error from poller!");
@@ -172,8 +166,8 @@ public class NowPlayingController extends AbstractController implements INotifia
 						break;
 					case PlayStatus.STOPPED:
 						final DataResponse<Boolean> doNothing = new DataResponse<Boolean>();
-						mControlManager.setPlaylistId(doNothing, mPlayListId < 0 ? 0 : mPlayListId, mActivity.getApplicationContext());
-						mControlManager.setPlaylistPos(doNothing, mLastPosition < 0 ? 0 : mLastPosition, mActivity.getApplicationContext());
+						//mControlManager.setPlaylistId(doNothing, mPlayListId < 0 ? 0 : mPlayListId, mActivity.getApplicationContext());
+						mControlManager.setPlaylistPos(doNothing, mPlayListId < 0 ? 0 : mPlayListId, mLastPosition < 0 ? 0 : mLastPosition, mActivity.getApplicationContext());
 						break;
 				}
 			}
@@ -215,7 +209,14 @@ public class NowPlayingController extends AbstractController implements INotifia
 
 	public void onActivityResume(final Activity activity) {
 		super.onActivityResume(activity);
-		ConnectionFactory.getNowPlayingPoller(activity.getApplicationContext()).subscribe(mNowPlayingHandler);
-		mControlManager = ManagerFactory.getControlManager(this);
+		new Thread("nowplaying-spawning") {
+			@Override
+			public void run() {
+				ConnectionFactory.getNowPlayingPoller(activity.getApplicationContext()).subscribe(mNowPlayingHandler);
+			}
+		}.start();
+		if (mControlManager != null) {
+			mControlManager.setController(this);
+		}
 	}
 }

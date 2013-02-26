@@ -22,10 +22,6 @@
 package org.xbmc.api.object;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.xbmc.android.jsonrpc.api.model.AudioModel.ArtistDetail;
 import org.xbmc.android.util.Crc32;
 import org.xbmc.api.type.MediaType;
 
@@ -40,22 +36,17 @@ public class Artist implements ICoverArt, Serializable, INamedResource {
 	 * TODO verify that's correct and test!
 	 * Points to where the artist thumbs are stored
 	 */
-	public final static String THUMB_PREFIX = "special://profile/Thumbnails/Music/Artists/";
+	public final static String THUMB_PREFIX = "special://profile/Thumbnails/";
 
 	/**
 	 * Constructor
 	 * @param id		Database ID
 	 * @param name		Artist name
 	 */
-	public Artist(int id, String name) {
+	public Artist(int id, String name, String arturl) {
 		this.id = id;
 		this.name = name;
-	}
-	
-	public Artist(ArtistDetail detail) {
-		this.id = detail.artistid;
-		this.name = detail.artist;
-		this.thumbnail = detail.thumbnail;
+		this.arturl = arturl;
 	}
 	
 	public int getMediaType() {
@@ -66,16 +57,24 @@ public class Artist implements ICoverArt, Serializable, INamedResource {
 		return this.name;
 	}
 	
+	/**
+	 * Composes the complete path to the artist's thumbnail
+	 * @return Path to thumbnail
+	 */
+	public String getThumbUri() {
+		return getThumbUri(this);
+	}
+	
 	public static String getThumbUri(ICoverArt cover) {
-		if(cover.getThumbnail() != null) {
-			return cover.getThumbnail();
-		}
-		final String hex = Crc32.formatAsHexLowerCase(cover.getCrc());
-		return THUMB_PREFIX + hex + ".tbn";
+		return cover.getThumbUrl();
 	}
 	
 	public static String getFallbackThumbUri(ICoverArt cover) {
 		return null;
+	}
+	
+	public String getThumbUrl(){
+		return arturl;
 	}
 	
 	/**
@@ -84,7 +83,7 @@ public class Artist implements ICoverArt, Serializable, INamedResource {
 	 */
 	public long getCrc() {
 		if (thumbID == 0) {
-			thumbID = Crc32.computeLowerCase("artist" + name);
+			thumbID = Crc32.computeLowerCase(arturl);
 		}
 		return thumbID;
 	}
@@ -118,10 +117,6 @@ public class Artist implements ICoverArt, Serializable, INamedResource {
 	public String getPath() {
 		return "";
 	}
-	
-	public String getThumbnail() {
-		return thumbnail;
-	}
 
 
 	/**
@@ -150,23 +145,23 @@ public class Artist implements ICoverArt, Serializable, INamedResource {
 	/**
 	 * Genres, separated by " / "
 	 */
-	public List<String> genres = new ArrayList<String>();
+	public String genres = null;
 	/**
 	 * Moods
 	 */
-	public List<String> moods = null;
+	public String moods = null;
 	/**
 	 * Styles
 	 */
-	public List<String> styles = null;
+	public String styles = null;
 	/**
 	 * Biography
 	 */
 	public String biography = null;
 	
-	public long thumbID = 0;
+	public String arturl = null;
 	
-	private String thumbnail;
+	public long thumbID = 0;
 	
 	private static final long serialVersionUID = 9073064679039418773L;
 

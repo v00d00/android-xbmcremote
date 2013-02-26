@@ -39,7 +39,7 @@ public interface IControlManager extends IManager {
 	 * @param response Response object
 	 * @param filename File to play
 	 */
-	public void playFile(final DataResponse<Boolean> response, final String filename, final Context context);
+	public void playFile(final DataResponse<Boolean> response, final String filename, final int playlistType, final Context context);
 
 	/**
 	 * Starts playing a whole folder
@@ -48,7 +48,7 @@ public interface IControlManager extends IManager {
 	 * @param playlistType Playlist type ("0" = music, "1" = video)
 	 * @param context Context reference
 	 */
-	public void playFolder(final DataResponse<Boolean> response, final String foldername, String playlistType, final Context context);
+	public void playFolder(final DataResponse<Boolean> response, final String foldername, final int playlistType, final Context context);
 
 	/**
 	 * Queues a whole folder
@@ -57,7 +57,7 @@ public interface IControlManager extends IManager {
 	 * @param playlistType Playlist type ("0" = music, "1" = video)
 	 * @param context Context reference
 	 */
-	public void queueFolder(final DataResponse<Boolean> response, final String foldername, String playlistType, final Context context);
+	public void queueFolder(final DataResponse<Boolean> response, final String foldername, final int playlistType, final Context context);
 	
 	/**
 	 * Start playing the media file at the given URL
@@ -67,6 +67,22 @@ public interface IControlManager extends IManager {
 	 * @return true on success, false otherwise.
 	 */
 	public void playUrl(final DataResponse<Boolean> response, String url, final Context context);
+	
+	/**
+	 * Plays the next item in the playlist.
+	 * @param response Response object
+	 * @param context Context reference
+	 * @return true on success, false otherwise.
+	 */
+	public void playNext(final DataResponse<Boolean> response, final Context context);
+	
+	/**
+	 * Adds a file or folder (<code>fileOrFolder</code> is either a file or a folder) to the current playlist.
+	 * @param response Response object
+	 * @param fileOrFolder File to play
+	 * @param context Context reference
+	 */
+	public void addToPlaylist(final DataResponse<Boolean> response, final String fileOrFolder, final int playlistType, final Context context);
 	
 	/**
 	 * Seeks to a position. If type is
@@ -130,7 +146,7 @@ public interface IControlManager extends IManager {
 	 * @param position New playlist position
 	 * @param context Context reference
 	 */
-	public void setPlaylistPos(final DataResponse<Boolean> response, final int position, final Context context);
+	public void setPlaylistPos(final DataResponse<Boolean> response, final int playlistId, final int position, final Context context);
 
 	/**
 	 * Clears playlist
@@ -138,7 +154,7 @@ public interface IControlManager extends IManager {
 	 * @param playlistId Playlist ID (0 = music, 1 = video)
 	 * @param context Context reference
 	 */
-	public void clearPlaylist(final DataResponse<Boolean> response, final String playlistId, final Context context);
+	public void clearPlaylist(final DataResponse<Boolean> response, final int playlistId, final Context context);
 	
 	/**
 	 * Sets the gui setting of XBMC to value

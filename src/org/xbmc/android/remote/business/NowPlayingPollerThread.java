@@ -22,17 +22,20 @@
 package org.xbmc.android.remote.business;
 
 import java.io.IOException;
-import java.net.URL;
-import java.net.URLConnection;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.util.HashSet;
 
+import org.xbmc.android.util.ClientFactory;
 import org.xbmc.android.util.HostFactory;
 import org.xbmc.api.business.DataResponse;
-import org.xbmc.api.business.IControlManager;
 import org.xbmc.api.business.INotifiableManager;
+import org.xbmc.api.data.IControlClient;
 import org.xbmc.api.data.IControlClient.ICurrentlyPlaying;
+import org.xbmc.api.data.IInfoClient;
 import org.xbmc.api.info.PlayStatus;
-import org.xbmc.api.presentation.INotifiableController;
+import org.xbmc.api.object.Host;
+import org.xbmc.jsonrpc.Connection;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -66,74 +69,66 @@ public class NowPlayingPollerThread extends Thread {
 	public static final int MESSAGE_PLAYLIST_ITEM_CHANGED = 667;
 	public static final int MESSAGE_COVER_CHANGED = 668;
 	public static final int MESSAGE_PLAYSTATE_CHANGED = 669;
-	public static final int MESSAGE_FANART_CHANGED = 670;
-	
-	
-	private static final int SOCKET_CONNECTION_TIMEOUT = 5000;
 
+	private IInfoClient mInfo;
+	private IControlClient mControl;
 	private final HashSet<Handler> mSubscribers;
 
 	private String mCoverPath;
 	private Bitmap mCover;
 
-	private String mFanartPath;
-	private Bitmap mFanart;	
-
 	private int mPlayList = -1;
 	private int mPosition = -1;
-	private int lastPlayStatus;
 
-	private final INotifiableController mControllerStub;
+	/**
+	 * Since this one is kinda of its own, we use a stub as manager.
+	 * @TODO create some toats or at least logs instead of empty on* methods.
+	 */
+	private final INotifiableManager mManagerStub;
 
 	public NowPlayingPollerThread(final Context context){
-		mControllerStub = new INotifiableController() {
-
-			public void onWrongConnectionState(int state,
-					INotifiableManager manager, Command<?> source) {
-			}
-
+		mManagerStub = new INotifiableManager() {
+			public void onMessage(int code, String message) { }
+			public void onMessage(String message) { }
 			public void onError(Exception e) {
+				// XXX link to context will eventually change if activity which created the thread changes (java.lang.RuntimeException: Can't create handler inside thread that has not called Looper.prepare())
+				//Toast toast = Toast.makeText(context, "Poller Error: " + e.getMessage(), Toast.LENGTH_LONG);
+				//toast.show();
 				if (e.getMessage() != null) {
 					Log.e(TAG, e.getMessage());
 				}
 				e.printStackTrace();
 			}
-
-			public void onMessage(String message) {
-				Log.d(TAG, message);
+			public void onFinish(DataResponse<?> response) {
 			}
-
-			public void runOnUI(Runnable action) {
-				new Thread(action).start();
-				
+			public void onWrongConnectionState(int state, Command<?> cmd) {
 			}
-
-			public Context getApplicationContext() {
-				return context;
+			public void retryAll() {
 			}
-			
-			
 		};
+		try {
+			mControl = ClientFactory.getControlClient(mManagerStub, context);
+		} catch (Exception e2) {
+			mControl = null;
+		}
+		try {
+			mInfo = ClientFactory.getInfoClient(mManagerStub, context);
+		} catch (Exception e1) {
+			mInfo = null;
+		}
 		mSubscribers = new HashSet<Handler>();
 	}
-	public void subscribe(final Handler handler) {
+
+	public void subscribe(Handler handler) {
 		// update handler on the state of affairs
-		ManagerFactory.getControlManager(mControllerStub).getCurrentlyPlaying(new DataResponse<ICurrentlyPlaying>() {
+		final ICurrentlyPlaying currPlaying = mControl.getCurrentlyPlaying(mManagerStub);
+		sendSingleMessage(handler, MESSAGE_PROGRESS_CHANGED, currPlaying);
+		sendSingleMessage(handler, MESSAGE_PLAYLIST_ITEM_CHANGED, currPlaying);
+		sendSingleMessage(handler, MESSAGE_COVER_CHANGED, currPlaying);
 
-			@Override
-			public void run() {
-				final ICurrentlyPlaying currPlaying = value;
-				sendSingleMessage(handler, MESSAGE_PROGRESS_CHANGED, currPlaying);
-				sendSingleMessage(handler, MESSAGE_PLAYLIST_ITEM_CHANGED, currPlaying);
-				sendSingleMessage(handler, MESSAGE_COVER_CHANGED, currPlaying);
-				sendSingleMessage(handler, MESSAGE_FANART_CHANGED, currPlaying);
-
-				synchronized (mSubscribers) {
-					mSubscribers.add(handler);
-				}
-			}
-		}, null);
-
+		synchronized (mSubscribers) {
+			mSubscribers.add(handler);
+		}
 	}
 
 	public void unSubscribe(Handler handler){
@@ -145,17 +140,13 @@ public class NowPlayingPollerThread extends Thread {
 	public Bitmap getNowPlayingCover(){
 		return mCover;
 	}
-	
-	public Bitmap getNowPlayingFanart(){
-		return mFanart;
-	}
 
 	/**
 	 * @return True if the stored cover art was updated.
 	 */
-	private boolean updateNowPlayingCover(ICurrentlyPlaying currPlaying) {
+	private boolean updateNowPlayingCover() {
 		try {
-			String downloadURI = currPlaying.getThumbnail();
+			String downloadURI = mInfo.getCurrentlyPlayingThumbURI(mManagerStub);
 			if (downloadURI == null || downloadURI.length() == 0) {
 				mCover = null;
 				String oldCoverPath = mCoverPath;
@@ -166,49 +157,21 @@ public class NowPlayingPollerThread extends Thread {
 			}
 			if (!downloadURI.equals(mCoverPath)) {
 				mCoverPath = downloadURI;
-				mCover = download(HostFactory.host.getVfsUrl(mCoverPath));
+				byte[] buffer = download(downloadURI);
+				if (buffer == null || buffer.length == 0)
+					mCover = null;
+				else
+					mCover = BitmapFactory.decodeByteArray(buffer, 0, buffer.length);
 				return true;
 			}
+		} catch (MalformedURLException e) {
+			Log.e(TAG, Log.getStackTraceString(e));
+		} catch (URISyntaxException e) {
+			Log.e(TAG, Log.getStackTraceString(e));
 		} catch (IOException e) {
 			Log.e(TAG, Log.getStackTraceString(e));
 		}
 		return false;
-	}
-	
-	/**
-	 * @return True if the stored fan art was updated.
-	 */
-	private boolean updateNowPlayingFanart(ICurrentlyPlaying currPlaying) {
-		try {
-			String downloadURI = currPlaying.getFanart();
-			if (downloadURI == null || downloadURI.length() == 0) {
-				mFanart = null;
-				String oldFanartPath = mFanartPath;
-				mFanartPath = null;
-				// If we had previously been handing out a thumbnail, clients
-				// need to update to the lack of one.
-				return oldFanartPath != null;
-			}
-			if (!downloadURI.equals(mFanartPath)) {
-				mFanartPath = downloadURI;
-				mFanart = download(HostFactory.host.getVfsUrl(mFanartPath));
-				return true;
-			}
-		} catch (IOException e) {
-			Log.e(TAG, Log.getStackTraceString(e));
-		}
-		return false;
-	}
-	
-	
-	private Bitmap download(String downloadURI) throws IOException {
-		final URL u = new URL(downloadURI);
-		Log.i(TAG, "Returning input stream for " + u.toString());
-		URLConnection uc;
-		uc = u.openConnection();
-		uc.setConnectTimeout(SOCKET_CONNECTION_TIMEOUT);
-		uc.setReadTimeout(HostFactory.host.getTimeout());
-		return BitmapFactory.decodeStream(uc.getInputStream());
 	}
 
 	public void sendMessage(int what, ICurrentlyPlaying curr) {
@@ -237,86 +200,72 @@ public class NowPlayingPollerThread extends Thread {
 			}
 		}
 	}
-	
-	private void checkArt(ICurrentlyPlaying currPlaying) {
-		boolean coverChanged = updateNowPlayingCover(currPlaying);
-		if (coverChanged) {
-			sendMessage(MESSAGE_COVER_CHANGED, currPlaying);
-		}
-		boolean fanartChanged = updateNowPlayingFanart(currPlaying);
-		if (fanartChanged) {
-			sendMessage(MESSAGE_FANART_CHANGED, currPlaying);
-		}
-	}
 
 	public void run() {
-		lastPlayStatus = PlayStatus.UNKNOWN;
-		 
+		String lastPos = "-1";
+		int lastPlayStatus = PlayStatus.UNKNOWN;
+		int currentPlayStatus = PlayStatus.UNKNOWN;
+		int currentMediaType = 0;
+		IControlClient control = mControl; // use local reference for faster access
 		HashSet<Handler> subscribers;
 		while (!isInterrupted() ) {
 			synchronized (mSubscribers) {
 				subscribers = new HashSet<Handler>(mSubscribers);
 			}
 			if (subscribers.size() > 0){
-				
+				/*				if (!control.isConnected()) {
+					sendEmptyMessage(MESSAGE_CONNECTION_ERROR);
+				} else {*/
+				ICurrentlyPlaying currPlaying;
 				try{
-					final IControlManager control = ManagerFactory.getControlManager(mControllerStub);
-					control.getCurrentlyPlaying(new DataResponse<ICurrentlyPlaying>() {
-						@Override
-						public void run() {
-							String lastPos = "-1";
-							int currentMediaType = 0;
-							
-							int currentPlayStatus = PlayStatus.UNKNOWN;
-							final ICurrentlyPlaying currPlaying = value;
-							
-							currentPlayStatus = currPlaying.getPlayStatus();
-							String currentPos = currPlaying.getTitle() + currPlaying.getDuration();
-
-							// send changed status
-							if (currentPlayStatus == PlayStatus.PLAYING) {
-								sendMessage(MESSAGE_PROGRESS_CHANGED, currPlaying);
-								checkArt(currPlaying);
-								
-							}
-
-							// play state changed?
-							if ((currentPlayStatus != lastPlayStatus) || (currentMediaType != currPlaying.getMediaType())) {
-								currentMediaType = currPlaying.getMediaType();
-
-								if (currentPlayStatus == PlayStatus.PLAYING) {
-									control.getPlaylistId(new DataResponse<Integer>() {
-										@Override
-										public void run() {
-											mPlayList = value;
-											sendMessage(MESSAGE_PLAYSTATE_CHANGED, currPlaying);
-										}
-									}, null);
-								} else {
-									sendMessage(MESSAGE_PLAYSTATE_CHANGED, currPlaying);
-									sendMessage(MESSAGE_PROGRESS_CHANGED, currPlaying);
-								}
-								checkArt(currPlaying);
-							}
-
-							// play position changed?
-							if (!lastPos.equals(currentPos)) {
-								lastPos = currentPos;
-
-								if (currPlaying.getPlaylistPosition() >= 0) {
-									mPosition = currPlaying.getPlaylistPosition();
-								}
-								sendMessage(MESSAGE_PLAYLIST_ITEM_CHANGED, currPlaying);
-
-								checkArt(currPlaying);
-							}
-							lastPlayStatus = currentPlayStatus;
-						}
-					}, null);
+					currPlaying = control.getCurrentlyPlaying(mManagerStub);
 				} catch(Exception e) {
-					//e.printStackTrace();
+					e.printStackTrace();
 					sendEmptyMessage(MESSAGE_CONNECTION_ERROR);
 					return;
+				}
+				currentPlayStatus = currPlaying.getPlayStatus();
+				String currentPos = currPlaying.getTitle() + currPlaying.getDuration();
+
+				// send changed status
+				if (currentPlayStatus == PlayStatus.PLAYING) {
+					sendMessage(MESSAGE_PROGRESS_CHANGED, currPlaying);
+					boolean coverChanged = updateNowPlayingCover();
+					if (coverChanged) {
+						sendMessage(MESSAGE_COVER_CHANGED, currPlaying);
+					}
+				}
+
+				// play state changed?
+				if ((currentPlayStatus != lastPlayStatus) || (currentMediaType != currPlaying.getMediaType())) {
+					currentMediaType = currPlaying.getMediaType();
+
+					if (currentPlayStatus == PlayStatus.PLAYING) {
+						mPlayList = control.getPlaylistId(mManagerStub);
+						sendMessage(MESSAGE_PLAYSTATE_CHANGED, currPlaying);
+					} else {
+						sendMessage(MESSAGE_PLAYSTATE_CHANGED, currPlaying);
+						sendMessage(MESSAGE_PROGRESS_CHANGED, currPlaying);
+					}
+					boolean coverChanged = updateNowPlayingCover();
+					if (coverChanged) {
+						sendMessage(MESSAGE_COVER_CHANGED, currPlaying);
+					}
+				}
+
+				// play position changed?
+				if (!lastPos.equals(currentPos)) {
+					lastPos = currentPos;
+
+					if (currPlaying.getPlaylistPosition() >= 0) {
+						mPosition = currPlaying.getPlaylistPosition();
+					}
+					sendMessage(MESSAGE_PLAYLIST_ITEM_CHANGED, currPlaying);
+
+					boolean coverChanged = updateNowPlayingCover();
+					if (coverChanged) {
+						sendMessage(MESSAGE_COVER_CHANGED, currPlaying);
+					}
 				}
 			}
 			try {
@@ -325,7 +274,20 @@ public class NowPlayingPollerThread extends Thread {
 				sendEmptyMessage(MESSAGE_RECONFIGURE);
 				return;
 			}
-			
+			lastPlayStatus = currentPlayStatus;
 		}
+	}
+
+	private byte[] download(String pathToDownload) throws IOException, URISyntaxException {
+		Connection connection;
+		final Host host = HostFactory.host;
+			if (host != null) {
+				connection = Connection.getInstance(host.addr, host.port);
+				connection.setAuth(host.user, host.pass);
+			} else {
+				connection = Connection.getInstance(null, 0);
+			}
+
+			return connection.download(pathToDownload);
 	}
 }

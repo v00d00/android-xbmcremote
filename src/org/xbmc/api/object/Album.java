@@ -22,10 +22,7 @@
 package org.xbmc.api.object;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
-import org.xbmc.android.jsonrpc.api.model.AudioModel.AlbumDetail;
 import org.xbmc.android.util.Crc32;
 import org.xbmc.api.type.MediaType;
 
@@ -40,7 +37,7 @@ public class Album implements ICoverArt, Serializable, INamedResource {
 	/**
 	 * Points to where the album thumbs are stored
 	 */
-	public final static String THUMB_PREFIX = "special://profile/Thumbnails/Music/";
+	public final static String THUMB_PREFIX = "special://profile/Thumbnails/";
 
 	/**
 	 * Constructor
@@ -61,24 +58,14 @@ public class Album implements ICoverArt, Serializable, INamedResource {
 		this.name = name;
 		this.artist = artist;
 		this.year = year;
-		thumbPath = thumbPath.replace("\\", "/");
-		if (!thumbPath.equals("NONE")) {
+		this.thumbPath = thumbPath;
+		if (!thumbPath.equals("")) {
 			try {
-				this.thumbID = Long.parseLong(thumbPath.substring(thumbPath.lastIndexOf("/") + 1, thumbPath.length() - 4), 16);
+				this.thumbID = Crc32.computeLowerCase(thumbPath);
 			} catch (NumberFormatException e) {
 				this.thumbID = 0L;
 			}
 		}
-	}
-	
-	public Album(AlbumDetail detail) {
-		this.id = detail.albumid;
-		this.name = detail.label;
-		if(detail.artist.size() > 0) {
-			this.artist = detail.artist.get(0);
-		}
-		this.year = detail.year;
-		this.thumbnail = detail.thumbnail;
 	}
 	
 	public int getMediaType() {
@@ -93,16 +80,12 @@ public class Album implements ICoverArt, Serializable, INamedResource {
 	 * Composes the complete path to the album's thumbnail
 	 * @return Path to thumbnail
 	 */
-	public String getThumbnail() {
-		return thumbnail;
+	public String getThumbUri() {
+		return getThumbUri(this);
 	}
 	
 	public static String getThumbUri(ICoverArt cover) {
-		if(cover.getThumbnail() != null) {
-			return cover.getThumbnail();
-		}
-		final String hex = Crc32.formatAsHexLowerCase(cover.getCrc());
-		return THUMB_PREFIX + hex.charAt(0) + "/" + hex + ".tbn";
+		return cover.getThumbUrl();
 	}
 	
 	public static String getFallbackThumbUri(ICoverArt cover) {
@@ -115,14 +98,15 @@ public class Album implements ICoverArt, Serializable, INamedResource {
 		}
 	}
 	
+	public String getThumbUrl() {
+		return thumbPath;
+	}
+	
 	/**
 	 * Returns the CRC of the album on which the thumb name is based upon.
 	 * @return CRC32
 	 */
 	public long getCrc() {
-		if (thumbID == 0) {
-			thumbID = Crc32.computeLowerCase((name + artist));
-		}
 		return thumbID;
 	}
 	
@@ -201,6 +185,7 @@ public class Album implements ICoverArt, Serializable, INamedResource {
 	 */
 	public int year = -1;
 	
+	public String thumbPath;
 	/**
 	 * Local path of the album
 	 */
@@ -213,7 +198,7 @@ public class Album implements ICoverArt, Serializable, INamedResource {
 	/**
 	 * Genres, separated by " / "
 	 */
-	public List<String> genres = new ArrayList<String>();
+	public String genres = null;
 	/**
 	 * Music label
 	 */
@@ -222,8 +207,6 @@ public class Album implements ICoverArt, Serializable, INamedResource {
 	 * Save this once it's calculated
 	 */
 	public long thumbID = 0;
-	
-	public String thumbnail;
 	
 	private static final long serialVersionUID = 4779827915067184250L;
 

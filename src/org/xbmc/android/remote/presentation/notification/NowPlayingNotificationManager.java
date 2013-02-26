@@ -2,6 +2,7 @@ package org.xbmc.android.remote.presentation.notification;
 
 import org.xbmc.android.remote.R;
 import org.xbmc.android.remote.business.NowPlayingPollerThread;
+import org.xbmc.android.remote.presentation.activity.NowPlayingActivity;
 import org.xbmc.android.util.ConnectionFactory;
 import org.xbmc.api.data.IControlClient.ICurrentlyPlaying;
 import org.xbmc.api.info.PlayStatus;
@@ -9,10 +10,14 @@ import org.xbmc.api.type.MediaType;
 
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
@@ -26,7 +31,6 @@ public class NowPlayingNotificationManager implements OnSharedPreferenceChangeLi
     private static NotificationBuilder mNotificationBuilder = null;
     private static boolean mEnabled = true;
     public static final int NOW_PLAYING_ID = 0;
-    public static String lastKey = "";
 
     private NowPlayingNotificationManager(Context context) {
         mContext = context;
@@ -58,26 +62,21 @@ public class NowPlayingNotificationManager implements OnSharedPreferenceChangeLi
         if((artist == null || artist.equals("") ) && (title == null || title.equals("")))
             removeNotification();
         else
-            showNotification(artist + " - " + title, "Paused on XBMC",R.drawable.notif_pause, thumb);
+            showNotification(artist, title, "Paused on XBMC",R.drawable.notif_pause, thumb);
     }
 
     public void showPlayingNotification(String artist, String title, Bitmap thumb) {
         if((artist == null || artist.equals("") ) && (title == null || title.equals("")))
             removeNotification();
         else
-            showNotification(artist + " - " + title, "Now playing on XBMC", R.drawable.notif_play, thumb);
+            showNotification(artist, title, "Now playing on XBMC", R.drawable.notif_play, thumb);
     }
 
-    public void showNotification(String title, String text, int icon, Bitmap thumb) {
-    	String newKey = title + "~" + text + "~" + icon;
-    	if(newKey.equals(lastKey)) {
-    		return;
-    	}
-        Notification notification = mNotificationBuilder.build(title, text, icon, thumb);
+    public void showNotification(String artist, String title, String text, int icon, Bitmap thumb) {
+        Notification notification = mNotificationBuilder.build(artist + " - " + title, text, icon, thumb);
         final String ns = Context.NOTIFICATION_SERVICE;
         NotificationManager notificationManager = (NotificationManager) mContext.getSystemService(ns);
         notificationManager.notify(NOW_PLAYING_ID, notification);
-        lastKey = newKey;
     }
 
     public void removeNotification() {
@@ -87,12 +86,18 @@ public class NowPlayingNotificationManager implements OnSharedPreferenceChangeLi
     }
 
     public void showSlideshowNotification(String fileName, String folder, Bitmap thumb) {
-    	
-    	showNotification(folder + "/" + fileName, "Slideshow on XBMC", R.drawable.notif_pic, thumb);
+        Notification notification = mNotificationBuilder.build(folder + "/" + fileName, "Slideshow on XBMC", R.drawable.notif_pic, thumb);
+        final String ns = Context.NOTIFICATION_SERVICE;
+        NotificationManager notificationManager = (NotificationManager) mContext.getSystemService(ns);
+        notificationManager.notify(NOW_PLAYING_ID, notification);
     }
 
     public void showVideoNotification(String movie, String genre, Bitmap thumb, int status) {
-    	showNotification(movie, genre, (status==PlayStatus.PAUSED) ? R.drawable.notif_pause : R.drawable.notif_play, thumb);
+        int smallIconId = (status==PlayStatus.PAUSED) ? R.drawable.notif_pause : R.drawable.notif_play;
+        Notification notification = mNotificationBuilder.build(movie, genre, smallIconId, thumb);
+        final String ns = Context.NOTIFICATION_SERVICE;
+        NotificationManager notificationManager = (NotificationManager) mContext.getSystemService(ns);
+        notificationManager.notify(NOW_PLAYING_ID, notification);
     }
 
     private final Handler mPollingHandler = new Handler() {
@@ -103,7 +108,6 @@ public class NowPlayingNotificationManager implements OnSharedPreferenceChangeLi
             case NowPlayingPollerThread.MESSAGE_PLAYSTATE_CHANGED:
                 ICurrentlyPlaying curr = (ICurrentlyPlaying)msg.getData().get(NowPlayingPollerThread.BUNDLE_CURRENTLY_PLAYING);
                 final int status = curr.getPlayStatus();
-                
                 if(status != PlayStatus.STOPPED) {
                     final int mediaType = curr.getMediaType();
                     switch(mediaType){
@@ -115,7 +119,7 @@ public class NowPlayingNotificationManager implements OnSharedPreferenceChangeLi
                         case MediaType.VIDEO_TVSEASON:
                         case MediaType.VIDEO_TVSHOW:
                         case MediaType.VIDEO:
-                            showVideoNotification(curr.getAlbum(), curr.getArtist(), thumb, status);
+                            showVideoNotification(curr.getTitle(), curr.getArtist(), thumb, status);
                             break;
                         default:
                             if(status == PlayStatus.PLAYING) {

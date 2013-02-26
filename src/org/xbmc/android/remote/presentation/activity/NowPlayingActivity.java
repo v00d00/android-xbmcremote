@@ -196,10 +196,8 @@ public class NowPlayingActivity extends Activity {
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
 		menu.clear();
-		menu.add(0, MENU_REMOTE, 0, "Remote control").setIcon(
-				R.drawable.menu_remote);
-		menu.add(0, MENU_MONITOR_MODE, 0, "Monitor mode").setIcon(
-				R.drawable.menu_view);
+		menu.add(0, MENU_REMOTE, 0, "Remote control").setIcon(R.drawable.menu_remote);
+		menu.add(0, MENU_MONITOR_MODE, 0, "Monitor mode").setIcon(R.drawable.menu_view);
 		return super.onPrepareOptionsMenu(menu);
 	}
 
@@ -209,8 +207,7 @@ public class NowPlayingActivity extends Activity {
 		switch (item.getItemId()) {
 		case MENU_REMOTE:
 			final Intent intent;
-			if (getSharedPreferences("global", Context.MODE_PRIVATE).getInt(
-					RemoteController.LAST_REMOTE_PREFNAME, -1) == RemoteController.LAST_REMOTE_GESTURE) {
+			if (getSharedPreferences("global", Context.MODE_PRIVATE).getInt(RemoteController.LAST_REMOTE_PREFNAME, -1) == RemoteController.LAST_REMOTE_GESTURE) {
 				intent = new Intent(this, GestureRemoteActivity.class);
 			} else {
 				intent = new Intent(this, RemoteActivity.class);
@@ -227,27 +224,23 @@ public class NowPlayingActivity extends Activity {
 
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
-		IEventClientManager client = ManagerFactory
-				.getEventClientManager(mNowPlayingController);
+		IEventClientManager client = ManagerFactory.getEventClientManager(mNowPlayingController);
 		switch (keyCode) {
 		case KeyEvent.KEYCODE_VOLUME_UP:
-			client.sendButton("R1", ButtonCodes.REMOTE_VOLUME_PLUS, false,
-					true, true, (short) 0, (byte) 0);
+			client.sendButton("R1", ButtonCodes.REMOTE_VOLUME_PLUS, false, true, true, (short) 0, (byte) 0);
 			return true;
 		case KeyEvent.KEYCODE_VOLUME_DOWN:
-			client.sendButton("R1", ButtonCodes.REMOTE_VOLUME_MINUS, false,
-					true, true, (short) 0, (byte) 0);
+			client.sendButton("R1", ButtonCodes.REMOTE_VOLUME_MINUS, false, true, true, (short) 0, (byte) 0);
 			return true;
 		case KeyEvent.KEYCODE_SEARCH:
 			switchMonitorMode();
 			return true;
-			/*
-			 * case KeyEvent.KEYCODE_PAGE_UP: switchMonitorMode(); return true;
-			 */
+/*		case KeyEvent.KEYCODE_PAGE_UP:
+			switchMonitorMode();
+			return true;*/
 		}
 		client.setController(null);
-		boolean handled = (mKeyTracker != null) ? mKeyTracker.doKeyDown(
-				keyCode, event) : false;
+		boolean handled = (mKeyTracker != null) ? mKeyTracker.doKeyDown(keyCode, event) : false;
 		return handled || super.onKeyDown(keyCode, event);
 	}
 
@@ -293,32 +286,19 @@ public class NowPlayingActivity extends Activity {
 
 	@Override
 	public boolean onKeyUp(int keyCode, KeyEvent event) {
-		boolean handled = (mKeyTracker != null) ? mKeyTracker.doKeyUp(keyCode,
-				event) : false;
+		boolean handled = (mKeyTracker != null) ? mKeyTracker.doKeyUp(keyCode, event) : false;
 		return handled || super.onKeyUp(keyCode, event);
 	}
-
+	
 	@Override
 	public void onBackPressed() {
 		if (isTaskRoot()) {
-			Intent intent = new Intent(NowPlayingActivity.this,
-					HomeActivity.class);
+			Intent intent = new Intent(NowPlayingActivity.this, HomeActivity.class );
 			NowPlayingActivity.this.startActivity(intent);
 		}
-
+		
 		finish();
-
-		return;
-	}
-
-	@Override
-	public boolean onMenuItemSelected(int featureId, MenuItem item) {
-		switch (item.getItemId()) {
-		case android.R.id.home:
-			finish();
-			return true;
-		default:
-			return super.onOptionsItemSelected(item);
-		}
+		
+	    return;
 	}
 }

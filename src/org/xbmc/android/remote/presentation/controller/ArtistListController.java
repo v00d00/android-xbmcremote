@@ -52,6 +52,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
+import android.widget.ListAdapter;
 import android.widget.Toast;
 
 public class ArtistListController extends ListController implements IController {
@@ -200,6 +201,9 @@ public class ArtistListController extends ListController implements IController 
 			item.setPosition(position);
 			item.setTitle(artist.name);
 			
+			if (mLoadCovers) {
+				view.getResponse().load(artist, !mPostScrollLoader.isListIdle());
+			}
 			if (mLoadCovers) {
 				if(mMusicManager.coverLoaded(artist, mThumbSize)){
 					item.setCover(mMusicManager.getCoverSync(artist, mThumbSize));

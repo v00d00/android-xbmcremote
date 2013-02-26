@@ -26,8 +26,8 @@ import java.util.HashMap;
 
 import org.xbmc.api.business.INotifiableManager;
 import org.xbmc.api.data.IControlClient;
-import org.xbmc.api.data.IControlClient.ICurrentlyPlaying;
 import org.xbmc.api.data.IMusicClient;
+import org.xbmc.api.data.IControlClient.ICurrentlyPlaying;
 import org.xbmc.api.info.PlayStatus;
 import org.xbmc.api.object.Album;
 import org.xbmc.api.object.Artist;
@@ -36,7 +36,6 @@ import org.xbmc.api.object.Host;
 import org.xbmc.api.object.ICoverArt;
 import org.xbmc.api.object.Song;
 import org.xbmc.api.type.MediaType;
-import org.xbmc.api.type.Sort;
 import org.xbmc.api.type.SortType;
 import org.xbmc.httpapi.Connection;
 
@@ -81,8 +80,8 @@ public class MusicClient extends Client implements IMusicClient {
 	 * @param album Album
 	 * @return True on success, false otherwise.
 	 */
-	public boolean addToPlaylist(INotifiableManager manager, Album album, Sort sort) {
-		return mConnection.getBoolean(manager, "AddToPlayListFromDB", LIBRARY_TYPE + ";" + getSongsCondition(album) + songsOrderBy(sort));
+	public boolean addToPlaylist(INotifiableManager manager, Album album, int sortBy, String sortOrder) {
+		return mConnection.getBoolean(manager, "AddToPlayListFromDB", LIBRARY_TYPE + ";" + getSongsCondition(album) + songsOrderBy(sortBy, sortOrder));
 	}
 
 	/**
@@ -90,8 +89,8 @@ public class MusicClient extends Client implements IMusicClient {
 	 * @param artist Artist
 	 * @return True on success, false otherwise.
 	 */
-	public boolean addToPlaylist(INotifiableManager manager, Artist artist, Sort sort) {
-		return mConnection.getBoolean(manager, "AddToPlayListFromDB", LIBRARY_TYPE + ";" + getSongsCondition(artist) + songsOrderBy(sort));
+	public boolean addToPlaylist(INotifiableManager manager, Artist artist, int sortBy, String sortOrder) {
+		return mConnection.getBoolean(manager, "AddToPlayListFromDB", LIBRARY_TYPE + ";" + getSongsCondition(artist) + songsOrderBy(sortBy, sortOrder));
 	}
 
 	/**
@@ -99,8 +98,8 @@ public class MusicClient extends Client implements IMusicClient {
 	 * @param genre Genre
 	 * @return True on success, false otherwise.
 	 */
-	public boolean addToPlaylist(INotifiableManager manager, Genre genre, Sort sort) {
-		return mConnection.getBoolean(manager, "AddToPlayListFromDB", LIBRARY_TYPE + ";" + getSongsCondition(genre) + songsOrderBy(sort));
+	public boolean addToPlaylist(INotifiableManager manager, Genre genre, int sortBy, String sortOrder) {
+		return mConnection.getBoolean(manager, "AddToPlayListFromDB", LIBRARY_TYPE + ";" + getSongsCondition(genre) + songsOrderBy(sortBy, sortOrder));
 	}
 
 	/**
@@ -109,8 +108,8 @@ public class MusicClient extends Client implements IMusicClient {
 	 * @param genre Genre
 	 * @return True on success, false otherwise.
 	 */
-	public boolean addToPlaylist(INotifiableManager manager, Artist artist, Genre genre, Sort sort) {
-		return mConnection.getBoolean(manager, "AddToPlayListFromDB", LIBRARY_TYPE + ";" + getSongsCondition(artist, genre) + songsOrderBy(sort));
+	public boolean addToPlaylist(INotifiableManager manager, Artist artist, Genre genre, int sortBy, String sortOrder) {
+		return mConnection.getBoolean(manager, "AddToPlayListFromDB", LIBRARY_TYPE + ";" + getSongsCondition(artist, genre) + songsOrderBy(sortBy, sortOrder));
 	}
 	
 	/**
@@ -170,7 +169,43 @@ public class MusicClient extends Client implements IMusicClient {
 	 * @return Songs in the playlist.
 	 */
 	public ArrayList<String> getPlaylist(INotifiableManager manager) {
-		return mConnection.getArray(manager, "GetPlaylistContents", PLAYLIST_ID);
+		ArrayList<String> temp= mConnection.getArray(manager, "GetPlaylistContents", PLAYLIST_ID);
+		return temp;
+		
+		/*
+		final ArrayList<String> nodes = mConnection.getArray("GetDirectory", "playlistmusic://");
+		final ArrayList<String> ids = new ArrayList<String>();
+		final int playlistPosition = getPlaylistPosition();
+		int i = 0;
+		for (String node : nodes) {
+			ids.add(node.substring(node.lastIndexOf('/') + 1, node.lastIndexOf('.')));
+			if (++i > PLAYLIST_LIMIT + playlistPosition) {
+				break;
+			}
+		}
+		StringBuilder sql = new StringBuilder();
+		sql.append("idSong IN (");
+		int j = 0;
+		for (String id : ids) {
+			sql.append(id);
+			if (++j < i) {
+				sql.append(',');
+			}
+		}
+		sql.append(")");
+		final HashMap<Integer, Song> unsortedSongs = getSongsAsHashMap(sql);
+		final ArrayList<Song> sortedSongs = new ArrayList<Song>();
+		
+		for (String node : nodes) {
+			try {
+				final int id = Integer.parseInt(node.substring(node.lastIndexOf('/') + 1, node.lastIndexOf('.')));
+				sortedSongs.add(unsortedSongs.get(id));
+			} catch (NumberFormatException e) { 
+				Log.e(TAG, e.getMessage());
+				e.printStackTrace();
+			}
+		}
+		return sortedSongs;*/
 	}
 	
 	/**
@@ -193,28 +228,34 @@ public class MusicClient extends Client implements IMusicClient {
 	/**
 	 * Plays an album. Playlist is previously cleared.
 	 * @param album Album to play
+	 * @param sortBy Sort field, see SortType.* 
+	 * @param sortOrder Sort order, must be either SortType.ASC or SortType.DESC.
 	 * @return True on success, false otherwise.
 	 */
-	public boolean play(INotifiableManager manager, Album album, Sort sort) {
-		return play(manager, getSongsCondition(album).append(songsOrderBy(sort)));
+	public boolean play(INotifiableManager manager, Album album, int sortBy, String sortOrder) {
+		return play(manager, getSongsCondition(album).append(songsOrderBy(sortBy, sortOrder)));
 	}
 	
 	/**
 	 * Plays all songs of a genre. Playlist is previously cleared.
 	 * @param genre Genre
+	 * @param sortBy Sort field, see SortType.* 
+	 * @param sortOrder Sort order, must be either SortType.ASC or SortType.DESC.
 	 * @return True on success, false otherwise.
 	 */
-	public boolean play(INotifiableManager manager, Genre genre, Sort sort) {
-		return play(manager, getSongsCondition(genre).append(songsOrderBy(sort)));
+	public boolean play(INotifiableManager manager, Genre genre, int sortBy, String sortOrder) {
+		return play(manager, getSongsCondition(genre).append(songsOrderBy(sortBy, sortOrder)));
 	}
 	
 	/**
 	 * Plays all songs from an artist. Playlist is previously cleared.
 	 * @param artist Artist
+	 * @param sortBy Sort field, see SortType.* 
+	 * @param sortOrder Sort order, must be either SortType.ASC or SortType.DESC.
 	 * @return True on success, false otherwise.
 	 */
-	public boolean play(INotifiableManager manager, Artist artist, Sort sort) {
-		return play(manager, getSongsCondition(artist).append(songsOrderBy(sort)));
+	public boolean play(INotifiableManager manager, Artist artist, int sortBy, String sortOrder) {
+		return play(manager, getSongsCondition(artist).append(songsOrderBy(sortBy, sortOrder)));
 	}
 	
 	/**
@@ -223,8 +264,8 @@ public class MusicClient extends Client implements IMusicClient {
 	 * @param genre Genre
 	 * @return True on success, false otherwise.
 	 */
-	public boolean play(INotifiableManager manager, Artist artist, Genre genre, Sort sort) {
-		return play(manager, getSongsCondition(artist, genre).append(songsOrderBy(sort)));
+	public boolean play(INotifiableManager manager, Artist artist, Genre genre) {
+		return play(manager, getSongsCondition(artist, genre).append(songsOrderBy(SortType.ARTIST, SortType.ORDER_ASC)));
 	}
 
 	/**
@@ -273,11 +314,15 @@ public class MusicClient extends Client implements IMusicClient {
 	 * @param artistIDs Array of artist IDs
 	 * @return All compilation albums
 	 */
-	public ArrayList<Album> getAlbums(INotifiableManager manager, ArrayList<Integer> artistIDs, Sort sort) {
+	public ArrayList<Album> getAlbums(INotifiableManager manager, ArrayList<Integer> artistIDs) {
 		StringBuilder sb = new StringBuilder();
-		sb.append("SELECT idAlbum, strAlbum, strArtist, iYear, strThumb");
-		sb.append(" FROM albumview WHERE albumview.strAlbum <> ''");
-		sb.append(" AND idArtist IN (");
+		sb.append("SELECT albumview.idAlbum, strAlbum, group_concat(DISTINCT strArtist) AS strArtists, iYear, art.url");
+		sb.append(" FROM albumview");
+		sb.append(" LEFT OUTER JOIN album_artist ON album_artist.idAlbum=albumview.idAlbum");
+		sb.append(" LEFT OUTER JOIN artist ON album_artist.idArtist=artist.idArtist");
+		sb.append(" LEFT OUTER JOIN art ON art.media_id=albumview.idAlbum AND art.media_type='album' AND art.type='thumb'");
+		sb.append(" WHERE albumview.strAlbum <> ''");
+		sb.append(" AND album_artist.idArtist IN (");
 		int n = 0;
 		for (Integer id : artistIDs) {
 			sb.append(id);
@@ -286,59 +331,69 @@ public class MusicClient extends Client implements IMusicClient {
 				sb.append(", ");
 			}
 		}
-		sb.append(")");
-		sb.append(albumsOrderBy(sort.sortBy, sort.sortOrder));
+		sb.append(") GROUP BY albumview.idAlbum");
 		return parseAlbums(mConnection.query("QueryMusicDatabase", sb.toString(), manager));
 	}
 	
 	/**
 	 * Gets all albums from database
+	 * @param sortBy Sort field, see SortType.* 
+	 * @param sortOrder Sort order, must be either SortType.ASC or SortType.DESC.
 	 * @return All albums
 	 */
-	public ArrayList<Album> getAlbums(INotifiableManager manager, Sort sort) {
-		
+	public ArrayList<Album> getAlbums(INotifiableManager manager, int sortBy, String sortOrder) {
 		StringBuilder sb = new StringBuilder();
-		sb.append("SELECT idAlbum, strAlbum, strArtist, iYear, strThumb");
-		sb.append(" FROM albumview WHERE albumview.strAlbum <> ''");
-		sb.append(albumsOrderBy(sort.sortBy, sort.sortOrder));
+		sb.append("SELECT albumview.idAlbum, strAlbum, group_concat(DISTINCT strArtist) AS strArtists, iYear, art.url");
+		sb.append(" FROM albumview");
+		sb.append(" LEFT OUTER JOIN album_artist ON album_artist.idAlbum=albumview.idAlbum");
+		sb.append(" LEFT OUTER JOIN artist ON album_artist.idArtist=artist.idArtist");
+		sb.append(" LEFT OUTER JOIN art ON art.media_id=albumview.idAlbum AND art.media_type='album' AND art.type='thumb'");
+		sb.append(" WHERE albumview.strAlbum <> '' GROUP BY albumview.idAlbum");
+		sb.append(albumsOrderBy(sortBy, sortOrder));
 		return parseAlbums(mConnection.query("QueryMusicDatabase", sb.toString(), manager));
 	}
 
 	/**
 	 * Gets all albums of an artist from database
 	 * @param artist Artist
+	 * @param sortBy Sort field, see SortType.* 
+	 * @param sortOrder Sort order, must be either SortType.ASC or SortType.DESC.
 	 * @return Albums with an artist
 	 */
-	public ArrayList<Album> getAlbums(INotifiableManager manager, Artist artist, Sort sort) {
+	public ArrayList<Album> getAlbums(INotifiableManager manager, Artist artist, int sortBy, String sortOrder) {
 		StringBuilder sb = new StringBuilder();
-		sb.append("SELECT idAlbum, strAlbum, strArtist, iYear, strThumb");
+		sb.append("SELECT albumview.idAlbum, strAlbum, group_concat(DISTINCT strArtist) AS strArtists, iYear, art.url");
 		sb.append(" FROM albumview");
+		sb.append(" LEFT OUTER JOIN album_artist ON album_artist.idAlbum=albumview.idAlbum");
+		sb.append(" LEFT OUTER JOIN artist ON album_artist.idArtist=artist.idArtist");
+		sb.append(" LEFT OUTER JOIN art ON art.media_id=albumview.idAlbum AND art.media_type='album' AND art.type='thumb'");
 		sb.append(" WHERE albumview.strAlbum <> ''");
-		sb.append(" AND idArtist = " + artist.id);
-		sb.append(albumsOrderBy(sort.sortBy, sort.sortOrder));
+		sb.append(" AND album_artist.idArtist = " + artist.id + " GROUP BY albumview.idAlbum");
+		sb.append(albumsOrderBy(sortBy, sortOrder));
 		return parseAlbums(mConnection.query("QueryMusicDatabase", sb.toString(), manager));
 	}
 
 	/**
 	 * Gets all albums of with at least one song in a genre
 	 * @param genre Genre
+	 * @param sortBy Sort field, see SortType.* 
+	 * @param sortOrder Sort order, must be either SortType.ASC or SortType.DESC.
 	 * @return Albums of a genre
 	 */
-	public ArrayList<Album> getAlbums(INotifiableManager manager, Genre genre, Sort sort) {
+	public ArrayList<Album> getAlbums(INotifiableManager manager, Genre genre, int sortBy, String sortOrder) {
 		StringBuilder sb = new StringBuilder();
-		sb.append("SELECT idAlbum, strAlbum, strArtist, iYear, strThumb");
-		sb.append("  FROM albumview");
-		sb.append("  WHERE albumview.strAlbum <> ''");
-		sb.append("  AND (idAlbum IN ("); 
+		sb.append("SELECT albumview.idAlbum, strAlbum, group_concat(DISTINCT strArtist) AS strArtists, iYear, art.url");
+			sb.append(" FROM albumview");
+			sb.append(" LEFT OUTER JOIN album_artist ON album_artist.idAlbum=albumview.idAlbum");
+			sb.append(" LEFT OUTER JOIN artist ON album_artist.idArtist=artist.idArtist");
+			sb.append(" LEFT OUTER JOIN art ON art.media_id=albumview.idAlbum AND art.media_type='album' AND art.type='thumb'");
+			sb.append("  WHERE albumview.strAlbum <> ''");
+		sb.append("  AND (albumview.idAlbum IN ("); 
 		sb.append("        SELECT song.idAlbum FROM song"); 			
-		sb.append("        JOIN exgenresong ON song.idSong = exgenresong.idSong"); 			
-		sb.append("        WHERE exgenresong.idGenre =  " + genre.id);
-		sb.append("  ) OR idAlbum IN (");
-		sb.append("        SELECT DISTINCT idAlbum");
-		sb.append("        FROM song");
-		sb.append("        WHERE idGenre = " + genre.id);
-		sb.append("  ))");
-		sb.append(albumsOrderBy(sort.sortBy, sort.sortOrder));
+		sb.append("        JOIN song_genre ON song.idSong = song_genre.idSong"); 			
+		sb.append("        WHERE song_genre.idGenre =  " + genre.id);
+		sb.append("  )) GROUP BY albumview.idAlbum");
+		sb.append(albumsOrderBy(sortBy, sortOrder));
 		return parseAlbums(mConnection.query("QueryMusicDatabase", sb.toString(), manager));
 	}
 	
@@ -347,11 +402,12 @@ public class MusicClient extends Client implements IMusicClient {
 	 * @param albumArtistsOnly If set to true, hide artists who appear only on compilations.
 	 * @return All albums
 	 */
-	public ArrayList<Artist> getArtists(INotifiableManager manager, boolean albumArtistsOnly, Sort sort) {
+	public ArrayList<Artist> getArtists(INotifiableManager manager, boolean albumArtistsOnly) {
 		StringBuilder sb = new StringBuilder();
 		if (albumArtistsOnly) {
-			sb.append("SELECT idArtist, strArtist ");
+			sb.append("SELECT idArtist, strArtist, art.url ");
 			sb.append("  FROM artist");
+			sb.append("  LEFT JOIN art ON art.media_id=idArtist AND art.media_type='artist' AND art.type='thumb'");
 			sb.append("  WHERE (");
 			sb.append("    idArtist IN (");
 			sb.append("      SELECT album.idArtist");
@@ -364,7 +420,8 @@ public class MusicClient extends Client implements IMusicClient {
 			sb.append("    )");
 			sb.append(") AND artist.strArtist != ''");
 		} else {
-			sb.append("SELECT idArtist, strArtist FROM artist");
+			sb.append("SELECT idArtist, strArtist, art.url FROM artist");
+			sb.append("  LEFT JOIN art ON art.media_id=idArtist AND art.media_type='artist' AND art.type='thumb'");
 		}
 		sb.append(" ORDER BY upper(strArtist), strArtist");
 		return parseArtists(mConnection.query("QueryMusicDatabase", sb.toString(), manager));
@@ -376,19 +433,16 @@ public class MusicClient extends Client implements IMusicClient {
 	 * @param albumArtistsOnly If set to true, hide artists who appear only on compilations.
 	 * @return Albums with a genre
 	 */
-	public ArrayList<Artist> getArtists(INotifiableManager manager, Genre genre, boolean albumArtistsOnly, Sort sort) {
+	public ArrayList<Artist> getArtists(INotifiableManager manager, Genre genre, boolean albumArtistsOnly) {
 		StringBuilder sb = new StringBuilder();
-		sb.append("SELECT DISTINCT idArtist, strArtist ");
+		sb.append("SELECT DISTINCT idArtist, strArtist, art.url ");
 		sb.append("  FROM artist");
+		sb.append("  LEFT JOIN art ON art.media_id=idArtist AND art.media_type='artist' AND art.type='thumb'");
 		sb.append("  WHERE (idArtist IN (");
 		sb.append("    SELECT DISTINCT s.idArtist");
-		sb.append("    FROM exgenresong AS g, song AS s");
+		sb.append("    FROM song_genre AS g, song_artist AS s");
 		sb.append("    WHERE g.idGenre = " + genre.id);
 		sb.append("    AND g.idSong = s.idSong");
-		sb.append("  ) OR idArtist IN (");
-		sb.append("    SELECT DISTINCT idArtist");
-		sb.append("     FROM song");
-		sb.append("     WHERE idGenre = " + genre.id);
 		sb.append("  ))");
 		if (albumArtistsOnly) {
 			sb.append("  AND (");
@@ -411,7 +465,7 @@ public class MusicClient extends Client implements IMusicClient {
 	 * Gets all genres from database
 	 * @return All genres
 	 */
-	public ArrayList<Genre> getGenres(INotifiableManager manager, Sort sort) {
+	public ArrayList<Genre> getGenres(INotifiableManager manager) {
 		return parseGenres(mConnection.query("QueryMusicDatabase", "SELECT idGenre, strGenre FROM genre ORDER BY upper(strGenre), strGenre", manager));
 	}
 	
@@ -422,9 +476,10 @@ public class MusicClient extends Client implements IMusicClient {
 	 */
 	public Album updateAlbumInfo(INotifiableManager manager, Album album) {
 		StringBuilder sb = new StringBuilder();
-		sb.append("SELECT g.strGenre, a.strExtraGenres, ai.strLabel, ai.iRating");
-		sb.append("  FROM album a, genre g");
-		sb.append("  LEFT JOIN albuminfo AS ai ON ai.idAlbumInfo = a.idAlbum");
+		sb.append("SELECT g.strGenre, ai.strLabel, ai.iRating");
+		sb.append("  FROM album_genre a");
+		sb.append("  LEFT JOIN genre g ON a.idGenre=g.idGenre");
+		sb.append("  LEFT JOIN albuminfo AS ai ON ai.idAlbum = a.idAlbum");
 		sb.append("  WHERE a.idGenre = g.idGenre");
 		sb.append("  AND a.idAlbum = " + album.id);
 		return parseAlbumInfo(album, mConnection.query("QueryMusicDatabase", sb.toString(), manager));
@@ -448,12 +503,17 @@ public class MusicClient extends Client implements IMusicClient {
 	 * @param sqlCondition SQL condition which tracks to return
 	 * @return Found tracks
 	 */
-	private ArrayList<Song> getSongs(INotifiableManager manager, StringBuilder sqlCondition, Sort sort) {
+	private ArrayList<Song> getSongs(INotifiableManager manager, StringBuilder sqlCondition, int sortBy, String sortOrder) {
 		StringBuilder sb = new StringBuilder();
-		sb.append("SELECT idSong, strTitle, strArtist, strAlbum, iTrack, iDuration, strPath, strFileName, strThumb");
-		sb.append(" FROM songview WHERE ");
+		sb.append("SELECT songview.idSong, strTitle, group_concat(DISTINCT strArtist) AS strArtists, strAlbum, iTrack, iDuration, strPath, strFileName, art.url");
+		sb.append(" FROM songview");
+		sb.append(" LEFT OUTER JOIN song_artist ON song_artist.idSong=songview.idSong");
+		sb.append(" LEFT OUTER JOIN artist ON song_artist.idArtist=artist.idArtist");
+		sb.append(" LEFT OUTER JOIN art ON art.media_id=songview.idSong AND art.media_type='song' AND art.type='thumb'");
+		sb.append(" WHERE ");
 		sb.append(sqlCondition);
-		sb.append(songsOrderBy(sort));
+		sb.append(" GROUP BY idSong");
+		sb.append(songsOrderBy(sortBy, sortOrder));
 		
 		return parseSongs(mConnection.query("QueryMusicDatabase", sb.toString(), manager));
 	}
@@ -503,10 +563,10 @@ public class MusicClient extends Client implements IMusicClient {
 	 */
 	private StringBuilder getSongsCondition(Artist artist) {
 		final StringBuilder sb = new StringBuilder();
-		sb.append("(");
-		sb.append("  idArtist = ");
+		//sb.append("(");
+		sb.append("  song_artist.idArtist = ");
 		sb.append(artist.id);
-		sb.append("  OR idSong IN (");
+		/*sb.append("  OR idSong IN (");
 		sb.append("     SELECT exartistsong.idSong");
 		sb.append("     FROM exartistsong");
 		sb.append("     WHERE exartistsong.idArtist = ");
@@ -526,7 +586,7 @@ public class MusicClient extends Client implements IMusicClient {
 		sb.append(artist.id);
 		sb.append("     AND album.strExtraArtists != ''");
 		sb.append("  )");
-		sb.append(")");
+		sb.append(")");*/
 		return sb;
 	}	
 	
@@ -537,10 +597,8 @@ public class MusicClient extends Client implements IMusicClient {
 	 */
 	private StringBuilder getSongsCondition(Genre genre) {
 		final StringBuilder sb = new StringBuilder();
-		sb.append("idGenre = ");
-		sb.append(genre.id);
-		sb.append("  OR idSong IN (");
-		sb.append("    SELECT exgenresong.idSong FROM exgenresong WHERE exgenresong.idGenre = ");
+		sb.append("  songview.idSong IN (");
+		sb.append("    SELECT song_genre.idSong FROM song_genre WHERE song_genre.idGenre = ");
 		sb.append(genre.id);
 		sb.append(")");
 		return sb;
@@ -591,38 +649,46 @@ public class MusicClient extends Client implements IMusicClient {
 	/**
 	 * Returns a list containing all tracks of an album. The list is sorted by filename.
 	 * @param album Album
+	 * @param sortBy Sort field, see SortType.* 
+	 * @param sortOrder Sort order, must be either SortType.ASC or SortType.DESC.	 
 	 * @return All tracks of an album
 	 */
-	public ArrayList<Song> getSongs(INotifiableManager manager, Album album, Sort sort) {
-		return getSongs(manager, getSongsCondition(album), null);
+	public ArrayList<Song> getSongs(INotifiableManager manager, Album album, int sortBy, String sortOrder) {
+		return getSongs(manager, getSongsCondition(album), sortBy, sortOrder);
 	}
 
 	/**
 	 * Returns a list containing all tracks of an artist. The list is sorted by album name, filename.
 	 * @param artist Artist
+	 * @param sortBy Sort field, see SortType.* 
+	 * @param sortOrder Sort order, must be either SortType.ASC or SortType.DESC.
 	 * @return All tracks of the artist
 	 */
-	public ArrayList<Song> getSongs(INotifiableManager manager, Artist artist, Sort sort) {
-		return getSongs(manager, getSongsCondition(artist), null);
+	public ArrayList<Song> getSongs(INotifiableManager manager, Artist artist, int sortBy, String sortOrder) {
+		return getSongs(manager, getSongsCondition(artist), sortBy, sortOrder);
 	}
 	
 	/**
 	 * Returns a list containing all tracks of a genre. The list is sorted by artist, album name, filename.
 	 * @param genre Genre
+	 * @param sortBy Sort field, see SortType.* 
+	 * @param sortOrder Sort order, must be either SortType.ASC or SortType.DESC.
 	 * @return All tracks of the genre
 	 */
-	public ArrayList<Song> getSongs(INotifiableManager manager, Genre genre, Sort sort) {
-		return getSongs(manager, getSongsCondition(genre), sort);
+	public ArrayList<Song> getSongs(INotifiableManager manager, Genre genre, int sortBy, String sortOrder) {
+		return getSongs(manager, getSongsCondition(genre), sortBy, sortOrder);
 	}
 	
 	/**
 	 * Returns a list containing all tracks of a genre AND and artist. The list is sorted by 
 	 * artist, album name, filename.
 	 * @param genre Genre
+	 * @param sortBy Sort field, see SortType.* 
+	 * @param sortOrder Sort order, must be either SortType.ASC or SortType.DESC.
 	 * @return All tracks of the genre
 	 */
-	public ArrayList<Song> getSongs(INotifiableManager manager, Artist artist, Genre genre, Sort sort) {
-		return getSongs(manager, getSongsCondition(artist, genre), sort);
+	public ArrayList<Song> getSongs(INotifiableManager manager, Artist artist, Genre genre, int sortBy, String sortOrder) {
+		return getSongs(manager, getSongsCondition(artist, genre), sortBy, sortOrder);
 	}
 	
 	/**
@@ -685,22 +751,19 @@ public class MusicClient extends Client implements IMusicClient {
 	 * @param sortOrder Sort order
 	 * @return SQL "ORDER BY" string
 	 */
-	private String songsOrderBy(Sort sort) {
-		if(sort == null) {
-			return "";
-		}
-		switch (sort.sortBy) {
+	private String songsOrderBy(int sortBy, String sortOrder) {
+		switch (sortBy) {
 			case SortType.ALBUM:
-				return " ORDER BY lower(strAlbum) " + sort.sortOrder + ", iTrack " + sort.sortOrder;
+				return " ORDER BY lower(strAlbum) " + sortOrder + ", iTrack " + sortOrder;
 			case SortType.ARTIST:
-				return " ORDER BY lower(strArtist) " + sort.sortOrder + ", lower(strAlbum) " + sort.sortOrder + ", iTrack " + sort.sortOrder;
+				return " ORDER BY lower(strArtist) " + sortOrder + ", lower(strAlbum) " + sortOrder + ", iTrack " + sortOrder;
 			case SortType.TITLE:
-				return " ORDER BY lower(strTitle)" + sort.sortOrder;
+				return " ORDER BY lower(strTitle)" + sortOrder;
 			case SortType.FILENAME:
-				return " ORDER BY lower(strFileName)" + sort.sortOrder;
+				return " ORDER BY lower(strFileName)" + sortOrder;
 			default:
 			case SortType.TRACK:
-				return " ORDER BY iTrack " + sort.sortOrder + ", lower(strFileName) " + sort.sortOrder;
+				return " ORDER BY iTrack " + sortOrder + ", lower(strFileName) " + sortOrder;
 			case SortType.DONT_SORT:
 				return "";
 		}
@@ -757,16 +820,13 @@ public class MusicClient extends Client implements IMusicClient {
 		String[] fields = response.split("<field>");
 		try {
 			if (Connection.trim(fields[1]).length() > 0) {
-				album.genres.add(Connection.trim(fields[1]));
+				album.genres = Connection.trim(fields[1]);
 			}
 			if (Connection.trim(fields[2]).length() > 0) {
-				album.genres.add(((Connection.trim(fields[1]).length() > 0) ? " / " : "") + Connection.trim(fields[2]));
+				album.label = Connection.trim(fields[2]);
 			}
 			if (Connection.trim(fields[3]).length() > 0) {
-				album.label = Connection.trim(fields[3]);
-			}
-			if (Connection.trim(fields[4]).length() > 0) {
-				album.rating = Connection.trimInt(fields[4]);
+				album.rating = Connection.trimInt(fields[3]);
 			}
 		} catch (Exception e) {
 			System.err.println("ERROR: " + e.getMessage());
@@ -801,13 +861,13 @@ public class MusicClient extends Client implements IMusicClient {
 				artist.formed = Connection.trim(fields[2]);
 			}
 			if (Connection.trim(fields[3]).length() > 0) {
-				artist.genres.add(Connection.trim(fields[3]));
+				artist.genres = Connection.trim(fields[3]);
 			}
 			if (Connection.trim(fields[4]).length() > 0) {
-				artist.moods.add(Connection.trim(fields[4]));
+				artist.moods = Connection.trim(fields[4]);
 			}
 			if (Connection.trim(fields[5]).length() > 0) {
-				artist.styles.add(Connection.trim(fields[5]));
+				artist.styles = Connection.trim(fields[5]);
 			}
 			if (Connection.trim(fields[6]).length() > 0) {
 				artist.biography = Connection.trim(fields[6]);
@@ -940,10 +1000,11 @@ public class MusicClient extends Client implements IMusicClient {
 		ArrayList<Artist> artists = new ArrayList<Artist>();
 		String[] fields = response.split("<field>");
 		try { 
-			for (int row = 1; row < fields.length; row += 2) { 
+			for (int row = 1; row < fields.length; row += 3) { 
 				artists.add(new Artist(
 						Connection.trimInt(fields[row]), 
-						Connection.trim(fields[row + 1])
+						Connection.trim(fields[row + 1]),
+						Connection.trim(fields[row + 2])
 				));
 			}
 		} catch (Exception e) {
@@ -1037,13 +1098,6 @@ public class MusicClient extends Client implements IMusicClient {
 				} else {
 					return 0;
 				}
-			}
-			public String getThumbnail() {
-				return map.get("Thumb");
-			}
-			
-			public String getFanart() {
-				return "";
 			}
 		};
 	}

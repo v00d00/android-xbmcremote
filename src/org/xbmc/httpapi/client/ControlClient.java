@@ -68,7 +68,7 @@ public class ControlClient implements IControlClient {
 	 * @param fileOrFolder
 	 * @return true on success, false otherwise.
 	 */
-	public boolean addToPlaylist(INotifiableManager manager, String fileOrFolder) {
+	public boolean addToPlaylist(INotifiableManager manager, String fileOrFolder, int playlistId) {
 		return mConnection.getBoolean(manager, "AddToPlayList", fileOrFolder);
 	}
 	
@@ -78,7 +78,7 @@ public class ControlClient implements IControlClient {
 	 * @param filename File to play
 	 * @return true on success, false otherwise.
 	 */
-	public boolean playFile(INotifiableManager manager, String filename) {
+	public boolean playFile(INotifiableManager manager, String filename, int playlistId) {
 		return mConnection.getBoolean(manager, "PlayFile", filename);
 	}
 	
@@ -355,7 +355,7 @@ public class ControlClient implements IControlClient {
 	 * @param position New playlist position
 	 * @return True on success, false otherwise.
 	 */
-	public boolean setPlaylistPos(INotifiableManager manager, int position) {
+	public boolean setPlaylistPos(INotifiableManager manager, int playlistId, int position) {
 		return mConnection.getBoolean(manager, "SetPlaylistSong", String.valueOf(position));
 	}
 	
@@ -365,8 +365,8 @@ public class ControlClient implements IControlClient {
 	 * @param int Playlist to clear (0 = music, 1 = video)
 	 * @return True on success, false otherwise.
 	 */
-	public boolean clearPlaylist(INotifiableManager manager, String playlistId) {
-		return mConnection.getBoolean(manager, "ClearPlayList", playlistId);
+	public boolean clearPlaylist(INotifiableManager manager, int playlistId) {
+		return mConnection.getBoolean(manager, "ClearPlayList", String.valueOf(playlistId));
 	}
 	
 	/**
@@ -375,10 +375,9 @@ public class ControlClient implements IControlClient {
 	 * @param playlistId Playlist ID ("0" = music, "1" = video)
 	 * @return True on success, false otherwise.
 	 */
-	public boolean setCurrentPlaylist(INotifiableManager manager, String playlistId) {
-		return mConnection.getBoolean(manager, "SetCurrentPlaylist", playlistId);
-	}
-	
+	public boolean setCurrentPlaylist(INotifiableManager manager, int playlistId) {
+		return mConnection.getBoolean(manager, "SetCurrentPlaylist", String.valueOf(playlistId));
+	}	
 	/**
 	 * Sets the correct response format to default values
 	 * @param manager Manager reference	 
@@ -429,10 +428,26 @@ public class ControlClient implements IControlClient {
 	 */
 	public ICurrentlyPlaying getCurrentlyPlaying(INotifiableManager manager) {
 		final HashMap<String, String> map = mConnection.getPairs(manager, "GetCurrentlyPlaying", " ; ; ;true");
+		final IControlClient.ICurrentlyPlaying nothingPlaying = new IControlClient.ICurrentlyPlaying() {
+			private static final long serialVersionUID = -1554068775915058884L;
+			public boolean isPlaying() { return false; }
+			public int getMediaType() { return 0; }
+			public int getPlaylistPosition() { return -1; }
+			public String getTitle() { return ""; }
+			public int getTime() { return 0; }
+			public int getPlayStatus() { return PlayStatus.STOPPED; }
+			public float getPercentage() { return 0; }
+			public String getFilename() { return ""; }
+			public int getDuration() { return 0; }
+			public String getArtist() { return ""; }
+			public String getAlbum() { return ""; }
+			public int getHeight() { return 0; }
+			public int getWidth() { return 0; }
+		};
 		if (map == null)
-			return NOTHING_PLAYING;
+			return nothingPlaying;
 		if (map.get("Filename") != null && map.get("Filename").contains("Nothing Playing")) {
-			return NOTHING_PLAYING;
+			return nothingPlaying;
 		} else {
 			//final int type = map.get("Type").contains("Audio") ? MediaType.MUSIC : (map.get("Type").contains("Video") ? MediaType.VIDEO : MediaType.PICTURES );
 			final int type;
@@ -448,7 +463,7 @@ public class ControlClient implements IControlClient {
 				else
 					type = MediaType.PICTURES;
 			} else {
-				return NOTHING_PLAYING;
+				return nothingPlaying;
 			}
 			switch (type) {
 				case MediaType.MUSIC:
@@ -460,7 +475,7 @@ public class ControlClient implements IControlClient {
 				case MediaType.PICTURES:
 					return PictureClient.getCurrentlyPlaying(map);
 				default:
-					return NOTHING_PLAYING;
+					return nothingPlaying;
 			}
 		}
 	}

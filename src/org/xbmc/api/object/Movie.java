@@ -23,9 +23,7 @@ package org.xbmc.api.object;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.List;
 
-import org.xbmc.android.jsonrpc.api.model.VideoModel.MovieDetail;
 import org.xbmc.android.util.Crc32;
 import org.xbmc.api.type.MediaType;
 
@@ -39,7 +37,7 @@ public class Movie implements ICoverArt, Serializable, INamedResource {
 	/**
 	 * Points to where the movie thumbs are stored
 	 */
-	public final static String THUMB_PREFIX = "special://profile/Thumbnails/Video/";
+	public final static String THUMB_PREFIX = "special://profile/Thumbnails/";
 
 	/**
 	 * Constructor
@@ -47,34 +45,19 @@ public class Movie implements ICoverArt, Serializable, INamedResource {
 	 * @param name		Album name
 	 * @param artist	Artist
 	 */
-	public Movie(int id, String title, int year, String path, String filename, String director, String runtime, String genres, double rating, int numWatched, String imdbId) {
+	public Movie(int id, String title, int year, String path, String filename, String director, String runtime, String genres, double rating, int numWatched, String imdbId, String artUrl) {
 		this.id = id;
 		this.title = title;
 		this.year = year;
-		this.director.add(director);
+		this.director = director;
 		this.runtime = runtime;
-		this.genres.add(genres);
+		this.genres = genres;
 		this.rating = rating;
 		this.localPath = path;
 		this.filename = filename;
 		this.numWatched = numWatched;
 		this.imdbId=imdbId;
-	}
-	
-	public Movie(MovieDetail detail) {
-		this.id = detail.movieid;
-		this.title = detail.title;
-		this.year = detail.year;
-		this.director = detail.director;
-		// runtime is in minutes
-		this.runtime = Integer.toString(detail.runtime / 60);
-		this.genres = detail.genre;
-		this.rating = detail.rating;
-		this.localPath = "";
-		this.filename = detail.file;
-		this.numWatched = detail.playcount;
-		this.imdbId = detail.imdbnumber;
-		this.thumbnail = detail.thumbnail;
+		this.artUrl=artUrl;
 	}
 	
 	public int getMediaType() {
@@ -98,22 +81,21 @@ public class Movie implements ICoverArt, Serializable, INamedResource {
 		return this.title;
 	}
 	
+	/**
+	 * Composes the complete path to the movie's thumbnail
+	 * @return Path to thumbnail
+	 */
+	public String getThumbUri() {
+		return getThumbUri(this);
+	}
+	
 	public static String getThumbUri(ICoverArt cover) {
-		if(cover.getThumbnail() != null) {
-			return cover.getThumbnail();
-		}
-		final String hex = Crc32.formatAsHexLowerCase(cover.getCrc());
-		return THUMB_PREFIX + hex.charAt(0) + "/" + hex + ".tbn";
+		return cover.getThumbUrl();
 	}
 	
 	public static String getFallbackThumbUri(ICoverArt cover) {
-		final int crc = cover.getFallbackCrc();
-		if (crc != 0) {
-			final String hex = Crc32.formatAsHexLowerCase(cover.getFallbackCrc());
-			return THUMB_PREFIX + hex.charAt(0) + "/" + hex + ".tbn";
-		} else {
-			return null;
-		}
+		final String hex = Crc32.formatAsHexLowerCase(cover.getCrc());
+		return THUMB_PREFIX + hex.charAt(0) + "/" + hex + ".jpg";
 	}
 	
 	/**
@@ -121,12 +103,7 @@ public class Movie implements ICoverArt, Serializable, INamedResource {
 	 * @return CRC32
 	 */
 	public long getCrc() {
-		if (thumbID == 0L && filename.startsWith("stack://")) {
-			final String[] file = filename.substring(8).split(" , ");
-			thumbID = Crc32.computeLowerCase(file[0]);
-		} else if (thumbID == 0L) {
-			thumbID = Crc32.computeLowerCase(localPath.concat(filename));
-		}
+		thumbID = Crc32.computeLowerCase(artUrl);
 		return thumbID;
 	}
 	
@@ -137,10 +114,14 @@ public class Movie implements ICoverArt, Serializable, INamedResource {
 	 */
 	public int getFallbackCrc() {
 		if (localPath != null && filename != null) {
-			return Crc32.computeLowerCase(localPath);
+			return Crc32.computeLowerCase(artUrl);
 		} else {
 			return 0;
 		}
+	}
+	
+	public String getThumbUrl() {
+		return artUrl;
 	}
 	
 	/**
@@ -166,10 +147,6 @@ public class Movie implements ICoverArt, Serializable, INamedResource {
 		return title + " (" + year + ")";
 	}
 	
-	public String getThumbnail() {
-		return thumbnail;
-	}
-	
 	/**
 	 * Something descriptive
 	 */
@@ -188,7 +165,7 @@ public class Movie implements ICoverArt, Serializable, INamedResource {
 	/**
 	 * Director(s), can be several separated by " / "
 	 */
-	public List<String> director = new ArrayList<String>();
+	public final String director;
 	/**
 	 * Runtime, can be several also, separated by " | "
 	 */
@@ -196,7 +173,7 @@ public class Movie implements ICoverArt, Serializable, INamedResource {
 	/**
 	 * Genre(s), can be several, normally separated by " / "
 	 */
-	public List<String> genres = new ArrayList<String>();
+	public final String genres;
 	/**
 	 * Year released, -1 if unknown
 	 */
@@ -240,7 +217,7 @@ public class Movie implements ICoverArt, Serializable, INamedResource {
 	/**
 	 * Studio
 	 */
-	public List<String> studio = new ArrayList<String>();
+	public String studio = null;
 	
 	/**
 	 * Number of watched, -1 if not set.
@@ -250,19 +227,19 @@ public class Movie implements ICoverArt, Serializable, INamedResource {
 	/**
 	 * List of actors; 
 	 */
-	public ArrayList<Actor> actors = new ArrayList<Actor>();
+	public ArrayList<Actor> actors = null;
 	
 	/**
 	 * The movie's imdbId
 	 */
 	private final String imdbId;
-	
+
+	public String artUrl;
 	/**
 	 * Save this once it's calculated
 	 */
 	public long thumbID = 0L;
 	
-	public String thumbnail;
-	
-	private static final long serialVersionUID = 4779827915067184250L;	
+	private static final long serialVersionUID = 4779827915067184250L;
+
 }

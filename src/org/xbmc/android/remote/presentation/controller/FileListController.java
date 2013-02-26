@@ -125,13 +125,13 @@ public class FileListController extends ListController implements IController {
 								}, item.path, mActivity.getApplicationContext());
 								break;
 							default:
-								mControlManager.playFile(new DataResponse<Boolean>() {
+								mControlManager.playFile(new DataResponse<Boolean>(){
 									public void run() {
-										if (value) {
-											mActivity.startActivity(new Intent(mActivity, NowPlayingActivity.class));
+									if (value) {
+										mActivity.startActivity(new Intent(mActivity, NowPlayingActivity.class));
 										}
 									}
-								}, item.path, mActivity.getApplicationContext());
+								}, item.path, MediaType.getPlaylistType(item.mediaType), mActivity.getApplicationContext());break;
 						}
 					}
 				}
@@ -154,8 +154,8 @@ public class FileListController extends ListController implements IController {
 			}
 			final FileLocation fileItem = this.getItem(position);
 			view.reset();
-			view.setPosition(position);
-			view.setTitle(fileItem.name);
+			view.position = position;
+			view.title = fileItem.name;
 			final Resources res = mActivity.getResources();
 			if (fileItem.isArchive) {
 				view.setCover(BitmapFactory.decodeResource(res, R.drawable.icon_zip));
@@ -221,24 +221,30 @@ public class FileListController extends ListController implements IController {
     /**
      * Provide the cursor for the list view.
      */
-	public void setListAdapter(ListAdapter adapter) {
+    public void setListAdapter(ListAdapter adapter) {
         synchronized (this) {
             mAdapter = adapter;
-            ((AbsListView)mList).setAdapter(adapter);
+            ((AdapterView<ListAdapter>) mList).setAdapter(adapter);
         }
     }
 
 	@Override
 	public void onContextItemSelected(MenuItem item) {
 		// be aware that this must be explicitly called by your activity!
-		final FileLocation loc = (FileLocation) mList.getAdapter().getItem(((OneLabelItemView)((AdapterContextMenuInfo)item.getMenuInfo()).targetView).getPosition());
+		final FileLocation loc = (FileLocation) mList.getAdapter().getItem(((OneLabelItemView)((AdapterContextMenuInfo)item.getMenuInfo()).targetView).position);
+		int playlistid = Integer.valueOf(MediaType.getPlaylistType(mMediaType));
 		switch(item.getItemId()) {
 		case ITEM_CONTEXT_QUEUE:
-			mControlManager.queueFolder(new QueryResponse(mActivity, "Queueing folder " + loc.path, "Error queueing folder."), loc.path, MediaType.getPlaylistType(mMediaType), mActivity);
+			mControlManager.queueFolder(new QueryResponse(mActivity, "Queueing " + loc.path, "Error queueing " + loc.path), loc.path, playlistid, mActivity);
 			break;
 		case ITEM_CONTEXT_PLAY:
-			mControlManager.playFolder(new QueryResponse(mActivity, "Playing folder " + loc.path, "Error playing folder."), loc.path, MediaType.getPlaylistType(mMediaType), mActivity);
-			break;
+			mControlManager.playFile(new DataResponse<Boolean>(){
+				public void run() {
+				if (value) {
+					mActivity.startActivity(new Intent(mActivity, NowPlayingActivity.class));
+					}
+				}
+			}, loc.path, playlistid, mActivity.getApplicationContext());break;
 		}
 	}
 
@@ -248,8 +254,8 @@ public class FileListController extends ListController implements IController {
 		Log.d("FileListController", "Create Context Menu");
 		final OneLabelItemView view = (OneLabelItemView)((AdapterContextMenuInfo)menuInfo).targetView;
 		menu.setHeaderTitle(((FileLocation)mList.getItemAtPosition(view.getPosition())).name);
-		menu.add(0, ITEM_CONTEXT_QUEUE, 1, "Queue Folder");
-		menu.add(0, ITEM_CONTEXT_PLAY, 2, "Play Folder");
+		menu.add(0, ITEM_CONTEXT_QUEUE, 1, "Queue");
+		menu.add(0, ITEM_CONTEXT_PLAY, 2, "Play Now");
 	}
 	
 	public void onActivityPause() {
@@ -263,8 +269,12 @@ public class FileListController extends ListController implements IController {
 	}
 
 	public void onActivityResume(Activity activity) {
-		mInfoManager = ManagerFactory.getInfoManager(this);
-		mControlManager = ManagerFactory.getControlManager(this);
+		if (mInfoManager != null) {
+			mInfoManager.setController(this);
+		}
+		if (mControlManager != null) {
+			mControlManager.setController(this);
+		}
 		super.onActivityResume(activity);
 	}
 	

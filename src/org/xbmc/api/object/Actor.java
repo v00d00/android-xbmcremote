@@ -21,7 +21,6 @@
 
 package org.xbmc.api.object;
 
-import org.xbmc.android.jsonrpc.api.model.VideoModel.Cast;
 import org.xbmc.android.util.Crc32;
 import org.xbmc.api.type.MediaType;
 
@@ -32,20 +31,15 @@ import org.xbmc.api.type.MediaType;
  */
 public class Actor extends Artist {
 	
-	public final static String THUMB_PREFIX = "special://profile/Thumbnails/Video/";
+	public final static String THUMB_PREFIX = "special://profile/Thumbnails/";
 
-	public Actor(int id, String name) {
-		super(id, name);
+	public Actor(int id, String name, String artUrl) {
+		super(id, name, artUrl);
 	}
 	
-	public Actor(int id, String name, String role) {
-		super(id, name);
+	public Actor(int id, String name, String artUrl, String role) {
+		super(id, name, artUrl);
 		this.role = role;
-	}
-	
-	public Actor(Cast member) {
-		super(-1, member.name);
-		this.role = member.role;
 	}
 	
 	/**
@@ -70,9 +64,8 @@ public class Actor extends Artist {
 	 * @return 8-char CRC32
 	 */
 	public long getCrc() {
-		if (thumbID == 0) {
-//			thumbID = Crc32.computeLowerCase("videodb://1/4/" + id);
-			thumbID = Crc32.computeLowerCase("actor" + name);
+		if (thumbID == 0 && arturl != null && arturl.compareTo("") != 0) {
+			thumbID = Crc32.computeLowerCase(arturl);
 		}
 		return thumbID;
 	}

@@ -31,7 +31,6 @@ import org.xbmc.api.business.DataResponse;
 import org.xbmc.api.business.IMusicManager;
 import org.xbmc.api.object.Genre;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
@@ -46,6 +45,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
+import android.widget.ListAdapter;
 
 public class MusicGenreListController extends ListController implements IController {
 	
@@ -66,7 +66,7 @@ public class MusicGenreListController extends ListController implements IControl
 				public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 					if(isLoading()) return;
 					Intent nextActivity;
-					Genre genre = (Genre)mList.getAdapter().getItem(((OneLabelItemView)view).getPosition());
+					Genre genre = (Genre)mList.getAdapter().getItem(((OneLabelItemView)view).position);
 					nextActivity = new Intent(view.getContext(), MusicGenreActivity.class);
 					nextActivity.putExtra(ListController.EXTRA_GENRE, genre);
 					nextActivity.putExtra(ListController.EXTRA_LIST_CONTROLLER, new SongListController());
@@ -77,13 +77,11 @@ public class MusicGenreListController extends ListController implements IControl
 			mFallbackBitmap = BitmapFactory.decodeResource(activity.getResources(), R.drawable.icon_genre);
 			
 			final String title = "Genres";
-			setTitle(title + "(Loading....)");
 			DataResponse<ArrayList<Genre>> response = new DataResponse<ArrayList<Genre>>() {
-				@SuppressLint("")
 				public void run() {
 					if (value.size() > 0) {
 						setTitle(title + " (" + value.size() + ")");
-						((AbsListView)mList).setAdapter(new GenreAdapter(mActivity, value));
+						((AdapterView<ListAdapter>) mList).setAdapter(new GenreAdapter(mActivity, value));
 					} else {
 						setTitle(title);
 						setNoDataMessage("No genres found.", R.drawable.icon_genre_dark);
@@ -102,7 +100,7 @@ public class MusicGenreListController extends ListController implements IControl
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
 		// be aware that this must be explicitly called by your activity!
-		final Genre genre = (Genre)mList.getAdapter().getItem(((OneLabelItemView)(((AdapterContextMenuInfo)menuInfo).targetView)).getPosition());
+		final Genre genre = (Genre)mList.getAdapter().getItem(((OneLabelItemView)(((AdapterContextMenuInfo)menuInfo).targetView)).position);
 		menu.setHeaderTitle(genre.name);
 		menu.add(0, ITEM_CONTEXT_QUEUE, 1, "Queue " + genre.name + " songs");
 		menu.add(0, ITEM_CONTEXT_PLAY, 2, "Play " + genre.name + " songs");
@@ -110,7 +108,7 @@ public class MusicGenreListController extends ListController implements IControl
 	
 	public void onContextItemSelected(MenuItem item) {
 		// be aware that this must be explicitly called by your activity!
-		final Genre genre = (Genre)mList.getAdapter().getItem(((OneLabelItemView)((AdapterContextMenuInfo)item.getMenuInfo()).targetView).getPosition());
+		final Genre genre = (Genre)mList.getAdapter().getItem(((OneLabelItemView)((AdapterContextMenuInfo)item.getMenuInfo()).targetView).position);
 		switch (item.getItemId()) {
 			case ITEM_CONTEXT_QUEUE:
 				mMusicManager.addToPlaylist(new QueryResponse(
@@ -143,8 +141,8 @@ public class MusicGenreListController extends ListController implements IControl
 			}
 			final Genre genre = this.getItem(position);
 			view.reset();
-			view.setPosition(position);
-			view.setTitle(genre.name);
+			view.position = position;
+			view.title = genre.name;
 			return view;
 		}
 	}
@@ -160,6 +158,8 @@ public class MusicGenreListController extends ListController implements IControl
 
 	public void onActivityResume(Activity activity) {
 		super.onActivityResume(activity);
-		mMusicManager = ManagerFactory.getMusicManager(this);
+		if (mMusicManager != null) {
+			mMusicManager.setController(this);
+		}
 	}
 }

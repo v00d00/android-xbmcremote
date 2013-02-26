@@ -27,6 +27,7 @@ import org.xbmc.android.remote.R;
 import org.xbmc.android.remote.business.AbstractManager;
 import org.xbmc.android.remote.business.ManagerFactory;
 import org.xbmc.android.remote.presentation.activity.GridActivity;
+import org.xbmc.android.remote.presentation.activity.ListActivity;
 import org.xbmc.android.remote.presentation.activity.TvShowDetailsActivity;
 import org.xbmc.android.remote.presentation.widget.FiveLabelsItemView;
 import org.xbmc.android.remote.presentation.widget.FlexibleItemView;
@@ -66,7 +67,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
-import android.widget.ListView;
+import android.widget.ListAdapter;
 import android.widget.Toast;
 
 public class TvShowListController extends ListController implements IController {
@@ -84,6 +85,7 @@ public class TvShowListController extends ListController implements IController 
 	public static final int MENU_SORT_BY_YEAR_DESC = 24;
 	public static final int MENU_SORT_BY_RATING_ASC = 25;
 	public static final int MENU_SORT_BY_RATING_DESC = 26;
+	public static final int MENU_RECENT_EPISODES = 27;
 	
 	private Actor mActor;
 	private Genre mGenre;
@@ -122,7 +124,7 @@ public class TvShowListController extends ListController implements IController 
 			mList.setOnItemClickListener(new OnItemClickListener() {
 				public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 					if(isLoading()) return;
-					final TvShow show = (TvShow)mList.getAdapter().getItem(((FiveLabelsItemView)view).getPosition());
+					final TvShow show = (TvShow)mList.getAdapter().getItem(((FiveLabelsItemView)view).position);
 					Intent nextActivity = new Intent(view.getContext(), GridActivity.class);
 					nextActivity.putExtra(ListController.EXTRA_TVSHOW, show);
 					nextActivity.putExtra(ListController.EXTRA_LIST_CONTROLLER, new SeasonListController());
@@ -145,7 +147,7 @@ public class TvShowListController extends ListController implements IController 
 			public void run() {
 				if (value.size() > 0) {
 					setTitle(title + " (" + value.size() + ")");
-					((ListView)mList).setAdapter(new TvShowAdapter(mActivity, value));
+					((AdapterView<ListAdapter>) mList).setAdapter(new TvShowAdapter(mActivity, value));
 				} else {
 					setTitle(title);
 					setNoDataMessage("No TV shows found.", R.drawable.icon_movie_dark);
@@ -199,14 +201,14 @@ public class TvShowListController extends ListController implements IController 
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
 		final FiveLabelsItemView view = (FiveLabelsItemView)((AdapterContextMenuInfo)menuInfo).targetView;
-		menu.setHeaderTitle(view.getTitle());
+		menu.setHeaderTitle(view.title);
 		menu.add(0, ITEM_CONTEXT_BROWSE, 1, "Browse TV Show");
 		menu.add(0, ITEM_CONTEXT_INFO, 2, "View Details");
 		menu.add(0, ITEM_CONTEXT_IMDB, 3, "Open IMDb");
 	}
 	
 	public void onContextItemSelected(MenuItem item) {
-		final TvShow show = (TvShow)mList.getAdapter().getItem(((FiveLabelsItemView)((AdapterContextMenuInfo)item.getMenuInfo()).targetView).getPosition());
+		final TvShow show = (TvShow)mList.getAdapter().getItem(((FiveLabelsItemView)((AdapterContextMenuInfo)item.getMenuInfo()).targetView).position);
 		switch (item.getItemId()) {
 			case ITEM_CONTEXT_BROWSE:
 				Intent browseActivity = new Intent(mActivity, GridActivity.class);
@@ -244,6 +246,7 @@ public class TvShowListController extends ListController implements IController 
 		sortMenu.add(2, MENU_SORT_BY_YEAR_DESC, 0, "by Year descending");
 		sortMenu.add(2, MENU_SORT_BY_RATING_ASC, 0, "by Rating ascending");
 		sortMenu.add(2, MENU_SORT_BY_RATING_DESC, 0, "by Rating descending");
+		sortMenu.add(2, MENU_RECENT_EPISODES, 0, "Recent Episodes");
 //		menu.add(0, MENU_SWITCH_VIEW, 0, "Switch view").setIcon(R.drawable.menu_view);
 		createShowHideWatchedToggle(menu);
 	}
@@ -296,6 +299,11 @@ public class TvShowListController extends ListController implements IController 
 			ed.commit();
 			fetch();
 			break;
+		case MENU_RECENT_EPISODES:
+			Intent recentEpisodesActivity = new Intent(mActivity, ListActivity.class);
+			recentEpisodesActivity.putExtra(ListController.EXTRA_LIST_CONTROLLER, new EpisodeListController());
+			mActivity.startActivity(recentEpisodesActivity);
+			break;
 		default:
 			super.onOptionsItemSelected(item);
 		}
@@ -324,10 +332,10 @@ public class TvShowListController extends ListController implements IController 
 
 			final TvShow show = getItem(position);
 			view.reset();
-			view.setPosition(position);
+			view.position = position;
 			view.posterOverlay = show.watched ? mWatchedBitmap : null;
-			view.setTitle(show.title);
-			view.subtitle = StringUtil.join(",", show.genre);
+			view.title = show.title;
+			view.subtitle = show.genre;
 			view.subtitleRight = show.firstAired != null ? show.firstAired : "";
 			view.bottomtitle = show.numEpisodes + " episodes";
 			view.bottomright = String.valueOf(((float) Math.round(show.rating * 10)) / 10);
@@ -359,8 +367,12 @@ public class TvShowListController extends ListController implements IController 
 
 	public void onActivityResume(Activity activity) {
 		super.onActivityResume(activity);
-		mTvManager = ManagerFactory.getTvManager(this);
-		mControlManager = ManagerFactory.getControlManager(this);
+		if (mTvManager != null) {
+			mTvManager.setController(this);
+		}
+		if (mControlManager != null) {
+			mControlManager.setController(this);
+		}
 	}
 
 }

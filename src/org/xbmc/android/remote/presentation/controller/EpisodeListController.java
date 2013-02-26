@@ -65,16 +65,17 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
-import android.widget.ListView;
+import android.widget.ListAdapter;
 import android.widget.Toast;
 
-@SuppressLint({ "", "" })
 public class EpisodeListController extends ListController implements IController {
 	
 	private static final int mThumbSize = ThumbSize.SMALL;
 	public static final int ITEM_CONTEXT_PLAY = 1;
 	public static final int ITEM_CONTEXT_INFO = 2;
-	
+	public static final int ITEM_CONTEXT_PLAY_FROM_HERE = 3;
+	public static final int ITEM_CONTEXT_QUEUE = 4;
+		
 	public static final int MENU_PLAY_ALL = 1;
 	public static final int MENU_SORT = 2;
 	public static final int MENU_SORT_BY_TITLE_ASC = 21;
@@ -87,7 +88,7 @@ public class EpisodeListController extends ListController implements IController
 	public static final int MENU_SORT_BY_EPISODE_DESC = 28;
 	
 	private Season mSeason;
-	private TvShow mTvShow;
+	private boolean mRecentEpisodes = false;
 	
 	private ITvShowManager mTvManager;
 	private IControlManager mControlManager;
@@ -113,7 +114,6 @@ public class EpisodeListController extends ListController implements IController
 			}
 			
 			mSeason = (Season)activity.getIntent().getSerializableExtra(ListController.EXTRA_SEASON);
-			mTvShow = (TvShow)activity.getIntent().getSerializableExtra(ListController.EXTRA_TVSHOW);
 			
 			activity.registerForContextMenu(mList);
 			
@@ -124,7 +124,7 @@ public class EpisodeListController extends ListController implements IController
 			mList.setOnItemClickListener(new OnItemClickListener() {
 				public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 					if(isLoading()) return;
-					final Episode episode = (Episode)mList.getAdapter().getItem(((FiveLabelsItemView)view).getPosition());
+					final Episode episode = (Episode)mList.getAdapter().getItem(((FiveLabelsItemView)view).position);
 					Intent nextActivity = new Intent(view.getContext(), EpisodeDetailsActivity.class);
 					nextActivity.putExtra(ListController.EXTRA_EPISODE, episode);
 					mActivity.startActivity(nextActivity);
@@ -138,7 +138,6 @@ public class EpisodeListController extends ListController implements IController
 	private void fetch() {		
 		// tv show and episode both are using the same manager so set the sort key here
 		((ISortableManager)mTvManager).setSortKey(AbstractManager.PREF_SORT_KEY_EPISODE);
-		((ISortableManager)mTvManager).setIgnoreArticle(PreferenceManager.getDefaultSharedPreferences(mActivity.getApplicationContext()).getBoolean(ISortableManager.SETTING_IGNORE_ARTICLE, true));
 		((ISortableManager)mTvManager).setPreferences(mActivity.getPreferences(Context.MODE_PRIVATE));
 		
 		final String title = mSeason != null ? mSeason.getName() + " - " : "" + "Episodes";
@@ -146,7 +145,7 @@ public class EpisodeListController extends ListController implements IController
 			public void run() {
 				if (value.size() > 0) {
 					setTitle(title + " (" + value.size() + ")");
-					((ListView)mList).setAdapter(new EpisodeAdapter(mActivity, value));
+					((AdapterView<ListAdapter>) mList).setAdapter(new EpisodeAdapter(mActivity, value));
 				} else {
 					setNoDataMessage("No episodes found.", R.drawable.icon_movie_dark);
 				}
@@ -155,9 +154,14 @@ public class EpisodeListController extends ListController implements IController
 		
 		showOnLoading();
 		setTitle(title + "...");
-		if (mSeason != null && mTvShow != null) {
-			mTvManager.getEpisodes(response, mTvShow, mSeason, mActivity.getApplicationContext());
+		if(mSeason != null){
+			mTvManager.getEpisodes(response, mSeason, mActivity.getApplicationContext());
 		}
+		else{
+			mTvManager.getRecentlyAddedEpisodes(response, mActivity.getApplicationContext());
+			mRecentEpisodes = true;
+		}
+		
 	}
 	
 	/**
@@ -195,27 +199,47 @@ public class EpisodeListController extends ListController implements IController
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
 		final FiveLabelsItemView view = (FiveLabelsItemView)((AdapterContextMenuInfo)menuInfo).targetView;
-		menu.setHeaderTitle(view.getTitle());
+		menu.setHeaderTitle(view.title);
 		menu.add(0, ITEM_CONTEXT_PLAY, 1, "Play Episode");
-		menu.add(0, ITEM_CONTEXT_INFO, 2, "View Details");
+		menu.add(0, ITEM_CONTEXT_PLAY_FROM_HERE, 2, "Play From Here");
+		menu.add(0, ITEM_CONTEXT_QUEUE, 3, "Queue Episode");
+		menu.add(0, ITEM_CONTEXT_INFO, 4, "View Details");
 	}
 	
 	public void onContextItemSelected(MenuItem item) {
-		final Episode episode = (Episode)mList.getAdapter().getItem(((FiveLabelsItemView)((AdapterContextMenuInfo)item.getMenuInfo()).targetView).getPosition());
+		int listpos = ((FiveLabelsItemView)((AdapterContextMenuInfo)item.getMenuInfo()).targetView).position;
+		final Episode episode = (Episode)mList.getAdapter().getItem(listpos);
 		switch (item.getItemId()) {
 			case ITEM_CONTEXT_PLAY:
-				mControlManager.playFile(new DataResponse<Boolean>() {
+				mControlManager.playFile(new DataResponse<Boolean>(){
 					public void run() {
-						if (value) {
-							mActivity.startActivity(new Intent(mActivity, NowPlayingActivity.class));
+					if (value) {
+						mActivity.startActivity(new Intent(mActivity, NowPlayingActivity.class));
 						}
 					}
-				}, episode.getPath(), mActivity.getApplicationContext());
+				}, episode.fileName, 1, mActivity.getApplicationContext());
 				break;
 			case ITEM_CONTEXT_INFO:
 				Intent nextActivity = new Intent(mActivity, EpisodeDetailsActivity.class);
 				nextActivity.putExtra(ListController.EXTRA_EPISODE, episode);
 				mActivity.startActivity(nextActivity);
+				break;
+			case ITEM_CONTEXT_PLAY_FROM_HERE:
+				mControlManager.clearPlaylist(new DataResponse<Boolean>(), 1, mActivity);				
+				//mControlManager.setPlaylistId(new DataResponse<Boolean>(), 1, mActivity);
+				int numitems = mList.getAdapter().getCount();
+				for(int i = 0; i < numitems; i++)
+					mControlManager.addToPlaylist(new DataResponse<Boolean>(), ((Episode)mList.getAdapter().getItem(i)).fileName, 1, mActivity);
+				mControlManager.setPlaylistPos(new DataResponse<Boolean>(){
+					public void run() {
+					if (value) {
+						mActivity.startActivity(new Intent(mActivity, NowPlayingActivity.class));
+						}
+					}
+				}, 1, listpos, mActivity.getApplicationContext());
+				break;
+			case ITEM_CONTEXT_QUEUE:
+				mControlManager.addToPlaylist(new QueryResponse(mActivity, "Queued episode: " + episode.getName(), "Error queueing file."), episode.fileName, 1, mActivity);
 				break;
 			default:
 				return;
@@ -312,10 +336,13 @@ public class EpisodeListController extends ListController implements IController
 			
 			final Episode episode = getItem(position);
 			view.reset();
-			view.setPosition(position);
+			view.position = position;
 			view.posterOverlay = episode.numWatched > 0 ? mWatchedBitmap : null;
-			view.setTitle(episode.episode + ". " + episode.title);
-//			view.subtitle = episode.;
+			view.title = episode.episode + ". " + episode.title;
+			if(mRecentEpisodes){
+				view.title = episode.showTitle;
+				view.subtitle = episode.season + "x" + (episode.episode < 10? "0" : "") + episode.episode + ". " + episode.title;
+			}
 			view.subtitleRight = episode.firstAired!=null?episode.firstAired:"";
 //			view.bottomtitle = show.numEpisodes + " episodes";
 			view.bottomright = String.valueOf(((float)Math.round(episode.rating *10))/ 10);
@@ -347,8 +374,12 @@ public class EpisodeListController extends ListController implements IController
 
 	public void onActivityResume(Activity activity) {
 		super.onActivityResume(activity);
-		mTvManager = ManagerFactory.getTvManager(this);
-		mControlManager = ManagerFactory.getControlManager(this);
+		if (mTvManager != null) {
+			mTvManager.setController(this);
+		}
+		if (mControlManager != null) {
+			mControlManager.setController(this);
+		}
 	}
 
 }

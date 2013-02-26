@@ -21,9 +21,6 @@ $ *      Copyright (C) 2005-2009 Team XBMC
 
 package org.xbmc.api.info;
 
-import android.util.Log;
-
-
 /**
  * Describes a play status, which can be:
  * <ul>
@@ -36,9 +33,9 @@ import android.util.Log;
  */
 public abstract class PlayStatus {
 	public static final int UNKNOWN = -1;
-	public static final int STOPPED = 0;
-	public static final int PAUSED = 1;
-	public static final int PLAYING = 2;
+	public static final int STOPPED = 2;
+	public static final int PAUSED = 0;
+	public static final int PLAYING = 1;
 	
 	public static int parse(String response) {
 		if (response.contains("PlayStatus:Paused") || response.equals("Paused")) {
@@ -48,14 +45,5 @@ public abstract class PlayStatus {
 		} else {
 			return PlayStatus.STOPPED;
 		}
-	}
-	
-	// JSON-RPC handler
-	public static int parse(Integer response) {
-		// we could be going backwards or forwards, but we're playing
-		if (response > 0 || response < 0) {
-			return PlayStatus.PLAYING;
-		}
-		return PlayStatus.PAUSED;
 	}
 }

@@ -29,7 +29,6 @@ import org.xbmc.android.remote.presentation.controller.ListController;
 import org.xbmc.android.util.KeyTracker;
 import org.xbmc.android.util.KeyTracker.Stage;
 import org.xbmc.android.util.OnLongPressBackKeyTracker;
-import org.xbmc.android.util.StringUtil;
 import org.xbmc.api.business.DataResponse;
 import org.xbmc.api.business.IControlManager;
 import org.xbmc.api.business.IEventClientManager;
@@ -42,28 +41,40 @@ import org.xbmc.eventclient.ButtonCodes;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Build.VERSION;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.Display;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
+import android.view.MenuItem.OnMenuItemClickListener;
 import android.view.View;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnClickListener;
+import android.view.View.OnCreateContextMenuListener;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class EpisodeDetailsActivity extends Activity {
 	
 	private static final String NO_DATA = "-";
 	
-    private ConfigurationManager mConfigurationManager;
+	public static final int CAST_CONTEXT_IMDB = 1;	
+	private static View selectedView;	
+	private static Actor selectedAcotr;
+	 
+	private ConfigurationManager mConfigurationManager;
     private EpisodeDetailsController mEpisodeDetailsController;
 
 	private KeyTracker mKeyTracker;
@@ -114,11 +125,12 @@ public class EpisodeDetailsActivity extends Activity {
 		}
 		((TextView)findViewById(R.id.tvepisodedetails_show)).setText(episode.showTitle);
 		((TextView)findViewById(R.id.tvepisodedetails_first_aired)).setText(episode.firstAired);
-		((TextView)findViewById(R.id.tvepisodedetails_director)).setText(StringUtil.join(", ", episode.director));
-		((TextView)findViewById(R.id.tvepisodedetails_writer)).setText(StringUtil.join(", ", episode.writer));
+		((TextView)findViewById(R.id.tvepisodedetails_director)).setText(episode.director);
+		((TextView)findViewById(R.id.tvepisodedetails_writer)).setText(episode.writer);
 		((TextView)findViewById(R.id.tvepisodedetails_rating)).setText(String.valueOf(episode.rating));
 		
 		mEpisodeDetailsController.setupPlayButton((Button)findViewById(R.id.tvepisodedetails_playbutton));
+		mEpisodeDetailsController.setupQueueButton((Button)findViewById(R.id.tvepisodedetails_queuebutton));
 		mEpisodeDetailsController.loadCover(new Handler(), (ImageView)findViewById(R.id.tvepisodedetails_thumb));
 		mEpisodeDetailsController.updateEpisodeDetails(
 				(TextView)findViewById(R.id.tvepisodedetails_plot),
@@ -145,13 +157,29 @@ public class EpisodeDetailsActivity extends Activity {
 			button.setText("Play Episode");
 			button.setOnClickListener(new OnClickListener() {
 				public void onClick(View v) {
-					mControlManager.playFile(new DataResponse<Boolean>() {
+					Toast.makeText(mActivity, "Playing Episode", Toast.LENGTH_LONG).show();
+					mControlManager.playFile(new DataResponse<Boolean>(){
 						public void run() {
-							if (value) {
-								mActivity.startActivity(new Intent(mActivity, NowPlayingActivity.class));
+						if (value) {
+							mActivity.startActivity(new Intent(mActivity, NowPlayingActivity.class));
 							}
 						}
-					}, mEpisode.getPath(), mActivity.getApplicationContext());
+					}, mEpisode.fileName, 1, mActivity.getApplicationContext());
+				}
+			});
+		}
+		
+		public void setupQueueButton(Button button) {
+			button.setText("Queue Episode");
+			button.setOnClickListener(new OnClickListener() {
+				public void onClick(View v) {
+					mControlManager.addToPlaylist(new DataResponse<Boolean>(){
+						public void run() {
+							if (value) {
+								Toast.makeText(mActivity, "Episode Queued", Toast.LENGTH_LONG).show();
+							}
+						}
+					}, mEpisode.getPath(), 1, mActivity);
 				}
 			});
 		}
@@ -212,6 +240,30 @@ public class EpisodeDetailsActivity extends Activity {
 //									mActivity.startActivity(nextActivity);
 //								}
 //							});
+							img.setOnCreateContextMenuListener(new OnCreateContextMenuListener() {
+								public void onCreateContextMenu(ContextMenu menu, View v,
+										ContextMenuInfo menuInfo) {
+									
+									selectedAcotr = (Actor) v.getTag();
+									selectedView = v;
+									
+								   // final FiveLabelsItemView view = (FiveLabelsItemView)((AdapterContextMenuInfo)menuInfo).targetView;
+									menu.setHeaderTitle(selectedAcotr.getShortName());
+									menu.add(0, CAST_CONTEXT_IMDB, 1, "Open IMDb").setOnMenuItemClickListener(new OnMenuItemClickListener(	) {
+										
+										public boolean onMenuItemClick(MenuItem item) {
+											Intent intentIMDb = new Intent(Intent.ACTION_VIEW, Uri.parse("imdb:///find?s=nm&q=" + selectedAcotr.getName()));
+											if (selectedView.getContext().getPackageManager().resolveActivity(intentIMDb, PackageManager.MATCH_DEFAULT_ONLY) == null)
+											{
+										    	intentIMDb = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.imdb.com/find?s=nm&q=" + selectedAcotr.getName()));
+											}
+											selectedView.getContext().startActivity(intentIMDb);
+								 
+											return false;
+										}
+									});
+								};
+							});
 							dataLayout.addView(view);
 							//n++;
 						}
@@ -222,12 +274,13 @@ public class EpisodeDetailsActivity extends Activity {
 
 		public void onActivityPause() {
 			mShowManager.setController(null);
+//			mShowManager.postActivity();
 			mControlManager.setController(null);
 		}
 
 		public void onActivityResume(Activity activity) {
-			mShowManager = ManagerFactory.getTvManager(this);
-			mControlManager = ManagerFactory.getControlManager(this);
+			mShowManager.setController(this);
+			mControlManager.setController(this);
 		}
 	}
 

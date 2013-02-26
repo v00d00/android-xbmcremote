@@ -28,11 +28,9 @@ import org.xbmc.android.remote.business.ManagerFactory;
 import org.xbmc.android.remote.presentation.activity.ListActivity;
 import org.xbmc.android.remote.presentation.widget.OneLabelItemView;
 import org.xbmc.api.business.DataResponse;
-import org.xbmc.api.business.ITvShowManager;
 import org.xbmc.api.business.IVideoManager;
 import org.xbmc.api.object.Genre;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
@@ -46,7 +44,7 @@ import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
-import android.widget.ListView;
+import android.widget.ListAdapter;
 
 public class MovieGenreListController extends ListController implements IController {
 	
@@ -54,7 +52,6 @@ public class MovieGenreListController extends ListController implements IControl
 	public static final int TYPE_TVSHOW = 1;
 	
 	private IVideoManager mVideoManager;
-	private ITvShowManager mTvShowManager;
 	private int mType;
 	
 	public MovieGenreListController(int type) {
@@ -86,11 +83,10 @@ public class MovieGenreListController extends ListController implements IControl
 			
 			final String title = mType == TYPE_MOVIE ? "Movie " : mType == TYPE_TVSHOW ? "TV Show " : "" + "genres";
 			DataResponse<ArrayList<Genre>> response = new DataResponse<ArrayList<Genre>>() {
-				@SuppressLint("")
 				public void run() {
 					if (value.size() > 0) {
 						setTitle(title + " (" + value.size() + ")");
-						((ListView)mList).setAdapter(new GenreAdapter(mActivity, value));
+						((AdapterView<ListAdapter>) mList).setAdapter(new GenreAdapter(mActivity, value));
 					} else {
 						setTitle(title);
 						setNoDataMessage("No genres found.", R.drawable.icon_genre_dark);
@@ -107,7 +103,7 @@ public class MovieGenreListController extends ListController implements IControl
 				mVideoManager.getMovieGenres(response, mActivity.getApplicationContext());
 				break;
 			case TYPE_TVSHOW:
-				mTvShowManager.getTvShowGenres(response, mActivity.getApplicationContext());
+				mVideoManager.getTvShowGenres(response, mActivity.getApplicationContext());
 				break;
 			}			
 		}
@@ -146,15 +142,13 @@ public class MovieGenreListController extends ListController implements IControl
 		if (mVideoManager != null) {
 			mVideoManager.setController(null);
 		}
-		if (mTvShowManager != null) {
-			mTvShowManager.setController(null);
-		}
 		super.onActivityPause();
 	}
 	
 	public void onActivityResume(Activity activity) {
 		super.onActivityResume(activity);
-		mVideoManager = ManagerFactory.getVideoManager(this);
-		mTvShowManager = ManagerFactory.getTvManager(this);
+		if (mVideoManager != null) {
+			mVideoManager.setController(this);
+		}
 	}
 }
