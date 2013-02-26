@@ -32,7 +32,6 @@ import org.xbmc.android.remote.presentation.activity.TvShowDetailsActivity;
 import org.xbmc.android.remote.presentation.widget.FiveLabelsItemView;
 import org.xbmc.android.remote.presentation.widget.FlexibleItemView;
 import org.xbmc.android.util.ImportUtilities;
-import org.xbmc.android.util.StringUtil;
 import org.xbmc.api.business.DataResponse;
 import org.xbmc.api.business.IControlManager;
 import org.xbmc.api.business.ISortableManager;
@@ -139,7 +138,6 @@ public class TvShowListController extends ListController implements IController 
 	private void fetch() {
 		// tv show and episode both are using the same manager so set the sort key here
 		((ISortableManager)mTvManager).setSortKey(AbstractManager.PREF_SORT_KEY_SHOW);
-		((ISortableManager)mTvManager).setIgnoreArticle(PreferenceManager.getDefaultSharedPreferences(mActivity.getApplicationContext()).getBoolean(ISortableManager.SETTING_IGNORE_ARTICLE, true));
 		((ISortableManager)mTvManager).setPreferences(mActivity.getPreferences(Context.MODE_PRIVATE));
 
 		final String title = mActor != null ? mActor.name + " - " : mGenre != null ? mGenre.name + " - " : "" + "TV Shows";

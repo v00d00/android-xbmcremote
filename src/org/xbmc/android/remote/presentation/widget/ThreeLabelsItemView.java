@@ -2,7 +2,6 @@ package org.xbmc.android.remote.presentation.widget;
 
 import org.xbmc.android.remote.R;
 import org.xbmc.api.business.IManager;
-import org.xbmc.api.type.ThumbSize;
 
 import android.content.Context;
 import android.graphics.Bitmap;

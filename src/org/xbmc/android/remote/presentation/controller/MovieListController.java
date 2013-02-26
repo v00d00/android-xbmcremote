@@ -21,7 +21,6 @@
 
 package org.xbmc.android.remote.presentation.controller;
 
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 import org.xbmc.android.remote.R;
@@ -31,7 +30,6 @@ import org.xbmc.android.remote.presentation.activity.MovieDetailsActivity;
 import org.xbmc.android.remote.presentation.activity.NowPlayingActivity;
 import org.xbmc.android.remote.presentation.widget.FiveLabelsItemView;
 import org.xbmc.android.util.ImportUtilities;
-import org.xbmc.android.util.StringUtil;
 import org.xbmc.api.business.DataResponse;
 import org.xbmc.api.business.IControlManager;
 import org.xbmc.api.business.ISortableManager;
@@ -42,7 +40,6 @@ import org.xbmc.api.object.Movie;
 import org.xbmc.api.type.SortType;
 import org.xbmc.api.type.ThumbSize;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -54,7 +51,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Handler;
-import android.preference.PreferenceManager;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
@@ -105,7 +101,6 @@ public class MovieListController extends ListController implements IController {
 		mControlManager = ManagerFactory.getControlManager(this);
 		
 		((ISortableManager)mVideoManager).setSortKey(AbstractManager.PREF_SORT_KEY_MOVIE);
-		((ISortableManager)mVideoManager).setIgnoreArticle(PreferenceManager.getDefaultSharedPreferences(activity.getApplicationContext()).getBoolean(ISortableManager.SETTING_IGNORE_ARTICLE, true));
 		((ISortableManager)mVideoManager).setPreferences(activity.getPreferences(Context.MODE_PRIVATE));
 		
 		final String sdError = ImportUtilities.assertSdCard();

@@ -200,10 +200,7 @@ public class ArtistListController extends ListController implements IController 
 			final Artist artist = this.getItem(position);
 			item.setPosition(position);
 			item.setTitle(artist.name);
-			
-			if (mLoadCovers) {
-				view.getResponse().load(artist, !mPostScrollLoader.isListIdle());
-			}
+
 			if (mLoadCovers) {
 				if(mMusicManager.coverLoaded(artist, mThumbSize)){
 					item.setCover(mMusicManager.getCoverSync(artist, mThumbSize));

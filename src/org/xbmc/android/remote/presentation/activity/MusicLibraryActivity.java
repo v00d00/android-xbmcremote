@@ -166,23 +166,6 @@ public class MusicLibraryActivity extends FragmentActivity implements INotifiabl
 	public boolean onPrepareOptionsMenu(Menu menu) {
 		menu.clear();
 		menu.add(0, MENU_NOW_PLAYING, 0, "Now playing").setIcon(R.drawable.menu_nowplaying);
-		switch (mTabHost.getCurrentTab()) {
-			case 0:
-				mAlbumController.onCreateOptionsMenu(menu);
-				break;
-			case 1:
-				mArtistController.onCreateOptionsMenu(menu);
-				break;
-			case 2:
-				mGenreController.onCreateOptionsMenu(menu);
-				break;
-			case 3:
-				mCompilationsController.onCreateOptionsMenu(menu);
-				break;
-			case 4:
-				mFileController.onCreateOptionsMenu(menu);
-				break;
-		}
 		menu.add(0, MENU_UPDATE_LIBRARY, 0, "Update Library").setIcon(R.drawable.menu_refresh);
 		menu.add(0, MENU_REMOTE, 0, "Remote control").setIcon(R.drawable.menu_remote);
 		return super.onPrepareOptionsMenu(menu);
@@ -190,26 +173,7 @@ public class MusicLibraryActivity extends FragmentActivity implements INotifiabl
 	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		
-		// first, process individual menu events
-		switch (mTabHost.getCurrentTab()) {
-		case 0:
-			mAlbumController.onOptionsItemSelected(item);
-			break;
-		case 1:
-			mArtistController.onOptionsItemSelected(item);
-			break;
-		case 2:
-			mGenreController.onOptionsItemSelected(item);
-			break;
-		case 3:
-			mCompilationsController.onOptionsItemSelected(item);
-			break;
-		case 4:
-			mFileController.onOptionsItemSelected(item);
-			break;
-		}
-		
+			
 		// then the generic ones.
 		switch (item.getItemId()) {
 		case MENU_REMOTE:
@@ -223,7 +187,7 @@ public class MusicLibraryActivity extends FragmentActivity implements INotifiabl
 			startActivity(intent);
 			return true;
 		case MENU_UPDATE_LIBRARY:
-			mAlbumController.updateLibrary();
+			//mAlbumController.updateLibrary();
 			return true;
 		case MENU_NOW_PLAYING:
 			startActivity(new Intent(this,  NowPlayingActivity.class));

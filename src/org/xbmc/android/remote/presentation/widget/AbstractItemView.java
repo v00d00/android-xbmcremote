@@ -25,8 +25,8 @@ public abstract class AbstractItemView extends RelativeLayout {
 		};
 	};
 
-	protected int position;
-	protected String title;
+	public int position;
+	public String title;
 
 	public AbstractItemView(Context context, IManager manager, int width, Bitmap defaultCover, Drawable selection, int thumbSize, boolean fixedSize) {
 		super(context);

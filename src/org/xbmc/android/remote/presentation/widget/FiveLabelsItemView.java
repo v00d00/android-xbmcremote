@@ -5,13 +5,6 @@ import org.xbmc.api.business.IManager;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-<<<<<<< HEAD
-=======
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Rect;
-import android.graphics.Paint.Align;
->>>>>>> master
 import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.widget.ImageView;

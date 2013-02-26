@@ -30,6 +30,7 @@ import org.xbmc.android.remote.business.ManagerFactory;
 import org.xbmc.android.remote.presentation.activity.DialogFactory;
 import org.xbmc.android.remote.presentation.activity.ListActivity;
 import org.xbmc.android.remote.presentation.widget.AlbumGridItem;
+import org.xbmc.android.remote.presentation.widget.ThreeLabelsItemView;
 import org.xbmc.android.util.ImportUtilities;
 import org.xbmc.api.business.CoverResponse;
 import org.xbmc.api.business.DataResponse;
@@ -152,7 +153,6 @@ public class AlbumListController extends ListController implements IController {
 		mInfoManager = ManagerFactory.getInfoManager(this);
 		
 		((ISortableManager)mMusicManager).setSortKey(AbstractManager.PREF_SORT_KEY_ALBUM);
-		((ISortableManager)mMusicManager).setIgnoreArticle(PreferenceManager.getDefaultSharedPreferences(activity.getApplicationContext()).getBoolean(ISortableManager.SETTING_IGNORE_ARTICLE, true));
 		((ISortableManager)mMusicManager).setPreferences(activity.getPreferences(Context.MODE_PRIVATE));
 		
 		final String sdError = ImportUtilities.assertSdCard();
@@ -391,20 +391,6 @@ public class AlbumListController extends ListController implements IController {
 			ed.commit();
 			fetch();
 			break;
-		case MENU_SORT_BY_PLAYCOUNT_ASC:
-			ed = mActivity.getPreferences(Context.MODE_PRIVATE).edit();
-			ed.putInt(AbstractManager.PREF_SORT_BY_PREFIX + AbstractManager.PREF_SORT_KEY_ALBUM, SortType.PLAYCOUNT);
-			ed.putString(AbstractManager.PREF_SORT_ORDER_PREFIX + AbstractManager.PREF_SORT_KEY_ALBUM, SortType.ORDER_ASC);
-			ed.commit();
-			fetch();
-			break;
-		case MENU_SORT_BY_PLAYCOUNT_DESC:
-			ed = mActivity.getPreferences(Context.MODE_PRIVATE).edit();
-			ed.putInt(AbstractManager.PREF_SORT_BY_PREFIX + AbstractManager.PREF_SORT_KEY_ALBUM, SortType.PLAYCOUNT);
-			ed.putString(AbstractManager.PREF_SORT_ORDER_PREFIX + AbstractManager.PREF_SORT_KEY_ALBUM, SortType.ORDER_DESC);
-			ed.commit();
-			fetch();
-			break;
 		case MENU_SORT_BY_DATEADDED_ASC:
 			ed = mActivity.getPreferences(Context.MODE_PRIVATE).edit();
 			ed.putInt(AbstractManager.PREF_SORT_BY_PREFIX + AbstractManager.PREF_SORT_KEY_ALBUM, SortType.DATE_ADDED);
@@ -415,20 +401,6 @@ public class AlbumListController extends ListController implements IController {
 		case MENU_SORT_BY_DATEADDED_DESC:
 			ed = mActivity.getPreferences(Context.MODE_PRIVATE).edit();
 			ed.putInt(AbstractManager.PREF_SORT_BY_PREFIX + AbstractManager.PREF_SORT_KEY_ALBUM, SortType.DATE_ADDED);
-			ed.putString(AbstractManager.PREF_SORT_ORDER_PREFIX + AbstractManager.PREF_SORT_KEY_ALBUM, SortType.ORDER_DESC);
-			ed.commit();
-			fetch();
-			break;
-		case MENU_SORT_BY_LASTPLAYED_ASC:
-			ed = mActivity.getPreferences(Context.MODE_PRIVATE).edit();
-			ed.putInt(AbstractManager.PREF_SORT_BY_PREFIX + AbstractManager.PREF_SORT_KEY_ALBUM, SortType.LASTPLAYED);
-			ed.putString(AbstractManager.PREF_SORT_ORDER_PREFIX + AbstractManager.PREF_SORT_KEY_ALBUM, SortType.ORDER_ASC);
-			ed.commit();
-			fetch();
-			break;
-		case MENU_SORT_BY_LASTPLAYED_DESC:
-			ed = mActivity.getPreferences(Context.MODE_PRIVATE).edit();
-			ed.putInt(AbstractManager.PREF_SORT_BY_PREFIX + AbstractManager.PREF_SORT_KEY_ALBUM, SortType.LASTPLAYED);
 			ed.putString(AbstractManager.PREF_SORT_ORDER_PREFIX + AbstractManager.PREF_SORT_KEY_ALBUM, SortType.ORDER_DESC);
 			ed.commit();
 			fetch();
