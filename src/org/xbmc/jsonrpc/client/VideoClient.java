@@ -93,6 +93,15 @@ public class VideoClient extends Client implements IVideoClient {
 				if(playcount > 0 && hideWatched)
 					continue;
 				
+				int runtime = getInt(jsonMovie, "runtime");
+				String formatted_runtime = "";
+				if(runtime != -1){						
+					if(runtime >= 3600)
+						formatted_runtime = (runtime / 3600) + "hr ";
+					formatted_runtime += ((runtime % 3600) / 60) + "min";					
+				}
+				
+				
 				movies.add(new Movie(
 					getInt(jsonMovie, "movieid"),
 					getString(jsonMovie, "label"),
@@ -100,7 +109,7 @@ public class VideoClient extends Client implements IVideoClient {
 					"",
 					getString(jsonMovie, "file"),
 					getString(jsonMovie, "director"),
-					getString(jsonMovie, "runtime"),
+					formatted_runtime,
 					getString(jsonMovie, "genre"),
 					getDouble(jsonMovie, "rating"),
 					playcount,
@@ -276,7 +285,7 @@ public class VideoClient extends Client implements IVideoClient {
 			private static final long serialVersionUID = 5036994329211476714L;
 			public String getTitle() {
 				String title =getString(item, "title");
-				if (title != null)
+				if (title != null && !title.equals(""))
 					return title;
 				String[] path = getString(item, "file").replaceAll("\\\\", "/").split("/");
 				return path[path.length - 1];
